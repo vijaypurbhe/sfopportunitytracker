@@ -28,14 +28,22 @@ function getPageContext(pathname: string): string {
   if (pathname === '/') return 'User is on the Dashboard viewing pipeline summary metrics.';
   if (pathname === '/pipeline') return 'User is on the Pipeline Kanban board.';
   if (pathname === '/opportunities') return 'User is on the Opportunities list page.';
-  if (pathname.startsWith('/opportunities/')) return 'User is viewing a specific opportunity detail.';
+  if (pathname.startsWith('/opportunities/')) return 'User is viewing a specific opportunity detail page. Use the entity data provided to answer contextually.';
   if (pathname === '/accounts') return 'User is on the Accounts page.';
-  if (pathname.startsWith('/accounts/')) return 'User is viewing a specific account.';
+  if (pathname.startsWith('/accounts/')) return 'User is viewing a specific account detail page. Use the entity data provided to answer contextually.';
   if (pathname === '/gates') return 'User is on the Approval Gates page.';
   if (pathname === '/ai-insights') return 'User is on the AI Insights page.';
   if (pathname === '/notifications') return 'User is on the Notifications page.';
   if (pathname === '/settings') return 'User is on the Settings page.';
   return 'User is browsing the CRM application.';
+}
+
+function extractEntityFromPath(pathname: string): { entityType: string; entityId: string } | null {
+  const oppMatch = pathname.match(/^\/opportunities\/([^/]+)$/);
+  if (oppMatch) return { entityType: 'opportunity', entityId: oppMatch[1] };
+  const accMatch = pathname.match(/^\/accounts\/([^/]+)$/);
+  if (accMatch) return { entityType: 'account', entityId: accMatch[1] };
+  return null;
 }
 
 export default function FloatingAIChat() {
@@ -60,10 +68,12 @@ export default function FloatingAIChat() {
     setLoading(true);
 
     try {
+      const entity = extractEntityFromPath(location.pathname);
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           messages: allMessages,
           context: getPageContext(location.pathname),
+          ...(entity ? { entityType: entity.entityType, entityId: entity.entityId } : {}),
         },
       });
       if (error) throw error;
