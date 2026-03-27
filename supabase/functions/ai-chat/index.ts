@@ -186,7 +186,7 @@ CRITICAL RULES:
 
 Current page context: ${context || 'General CRM usage'}
 
-${dataContext}${extraContext}`;
+${dataContext}${entityContext}${extraContext}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
