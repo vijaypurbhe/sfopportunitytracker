@@ -133,7 +133,11 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef, regionFilter }: { ti
               prose-table:text-[12px] prose-th:px-2 prose-th:py-1 prose-th:bg-muted/50 prose-th:font-semibold
               prose-td:px-2 prose-td:py-1 prose-td:border-t prose-td:border-border/30
               prose-code:text-[12px] prose-code:bg-muted/50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded">
-              <ReactMarkdown>{response}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+                table: (props) => <table className="w-full text-[12px] border-collapse border border-border/30 my-2" {...props} />,
+                th: (props) => <th className="border border-border/30 px-2 py-1 bg-muted/50 text-left font-semibold" {...props} />,
+                td: (props) => <td className="border border-border/30 px-2 py-1 align-top" {...props} />,
+              }}>{response}</ReactMarkdown>
             </div>
           )}
         </div>
