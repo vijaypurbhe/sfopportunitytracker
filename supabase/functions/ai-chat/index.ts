@@ -36,7 +36,7 @@ serve(async (req) => {
       const stage = o.stage || '';
       const salesStage = (o.sales_stage || '').toLowerCase();
       if (excludedStages.includes(stage)) return false;
-      if (salesStage.includes('won') || salesStage.includes('lost') || salesStage.includes('abort')) return false;
+      if (salesStage.includes('won') || salesStage.includes('lost') || salesStage.includes('abort') || salesStage.includes('hibernate')) return false;
       return true;
     });
     const totalTCV = activeOpps.reduce((s, o) => s + (Number(o.overall_tcv) || 0), 0);
@@ -86,25 +86,26 @@ serve(async (req) => {
 
     const dataContext = `
 ## ACTUAL PIPELINE DATA (Use ONLY these numbers — never make up data)
+NOTE: All TCV and ACV values are already in millions (M). Do NOT divide again.
 - Total opportunities: ${allOpps.length}
-- Active deals (P-1 to P4): ${activeOpps.length}
-- Active pipeline TCV: $${(totalTCV / 1e6).toFixed(2)}M (${totalTCV.toFixed(0)} USD)
+- Active deals (excluding Won/Lost/Aborted/Hibernate): ${activeOpps.length}
+- Active pipeline TCV: $${totalTCV.toFixed(2)}M
 - Won deals: ${wonDeals.length}
 - Lost deals: ${lostDeals.length}
 - Win rate: ${winRate}%
 - Avg win probability (active): ${avgWinProb}%
 
 ### Stage Distribution
-${Object.entries(stageCounts).sort((a, b) => b[1].count - a[1].count).map(([st, d]) => `- ${st}: ${d.count} deals, TCV $${(d.tcv / 1e6).toFixed(2)}M`).join('\n')}
+${Object.entries(stageCounts).sort((a, b) => b[1].count - a[1].count).map(([st, d]) => `- ${st}: ${d.count} deals, TCV $${d.tcv.toFixed(2)}M`).join('\n')}
 
 ### Industry Distribution (top 10)
 ${Object.entries(industryCounts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([ind, c]) => `- ${ind}: ${c} deals`).join('\n')}
 
 ### ACV by Fiscal Year
-${Object.entries(acvFY).map(([fy, v]) => `- ${fy}: $${(v / 1e6).toFixed(2)}M`).join('\n')}
+${Object.entries(acvFY).map(([fy, v]) => `- ${fy}: $${v.toFixed(2)}M`).join('\n')}
 
 ### Top 15 Deals by TCV
-${topDeals.map(d => `- ${d.name} | ${d.account} | Stage: ${d.stage} | TCV: $${((d.tcv || 0) / 1e6).toFixed(2)}M | Win%: ${d.winProb || 0} | ${d.industry} | ${d.country} | Close: ${d.closeDate || 'N/A'}`).join('\n')}
+${topDeals.map(d => `- ${d.name} | ${d.account} | Stage: ${d.stage} | TCV: $${(d.tcv || 0).toFixed(2)}M | Win%: ${d.winProb || 0} | ${d.industry} | ${d.country} | Close: ${d.closeDate || 'N/A'}`).join('\n')}
 `;
 
     // If extra data was passed from the frontend (e.g. tile-specific data), include it
