@@ -68,10 +68,12 @@ export default function FloatingAIChat() {
     setLoading(true);
 
     try {
+      const entity = extractEntityFromPath(location.pathname);
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           messages: allMessages,
           context: getPageContext(location.pathname),
+          ...(entity ? { entityType: entity.entityType, entityId: entity.entityId } : {}),
         },
       });
       if (error) throw error;
