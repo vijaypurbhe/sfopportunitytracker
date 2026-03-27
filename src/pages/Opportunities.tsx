@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { formatCurrency, formatDate, getStageColor, formatPercent } from '@/lib/format';
 import { Input } from '@/components/ui/input';
-
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, ArrowUpDown } from 'lucide-react';
+import CreateOpportunityDialog from '@/components/CreateOpportunityDialog';
 
 export default function Opportunities() {
   const { data: opportunities, isLoading } = useOpportunities();
@@ -41,9 +41,15 @@ export default function Opportunities() {
         return true;
       })
       .sort((a, b) => {
-        const aVal = a[sortField as keyof typeof a];
-        const bVal = b[sortField as keyof typeof b];
-        const cmp = String(aVal || '').localeCompare(String(bVal || ''));
+        const numericFields = ['overall_tcv', 'win_probability', 'ebitda_percent', 'total_resources'];
+        if (numericFields.includes(sortField)) {
+          const aVal = (a as any)[sortField] ?? 0;
+          const bVal = (b as any)[sortField] ?? 0;
+          return sortDir === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+        const aVal = String((a as any)[sortField] || '');
+        const bVal = String((b as any)[sortField] || '');
+        const cmp = aVal.localeCompare(bVal);
         return sortDir === 'asc' ? cmp : -cmp;
       });
   }, [opportunities, search, stageFilter, industryFilter, sortField, sortDir]);
@@ -69,6 +75,7 @@ export default function Opportunities() {
           <h1 className="text-2xl font-bold text-foreground">Opportunities</h1>
           <p className="text-sm text-muted-foreground">{filtered.length} of {opportunities?.length || 0} opportunities</p>
         </div>
+        <CreateOpportunityDialog />
       </div>
 
       {/* Filters */}
@@ -117,7 +124,9 @@ export default function Opportunities() {
               </TableHead>
               <TableHead>Owner</TableHead>
               <TableHead>Industry</TableHead>
-              <TableHead>Close Date</TableHead>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('expected_close_date')}>
+                <div className="flex items-center gap-1">Close Date <ArrowUpDown className="h-3 w-3" /></div>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

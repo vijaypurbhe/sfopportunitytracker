@@ -1,23 +1,60 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { formatCurrency, getStageColor } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import CreateOpportunityDialog from '@/components/CreateOpportunityDialog';
+
+const ALL_STAGES = ['P1', 'P2', 'P3', 'P4', 'P5'];
+
+type SortOption = 'tcv_desc' | 'tcv_asc' | 'win_desc' | 'win_asc' | 'name_asc' | 'close_asc';
+
+function sortOpps(opps: any[], sort: SortOption) {
+  return [...opps].sort((a, b) => {
+    switch (sort) {
+      case 'tcv_desc': return (b.overall_tcv || 0) - (a.overall_tcv || 0);
+      case 'tcv_asc': return (a.overall_tcv || 0) - (b.overall_tcv || 0);
+      case 'win_desc': return (b.win_probability || 0) - (a.win_probability || 0);
+      case 'win_asc': return (a.win_probability || 0) - (b.win_probability || 0);
+      case 'name_asc': return (a.opportunity_name || '').localeCompare(b.opportunity_name || '');
+      case 'close_asc': return (a.expected_close_date || '').localeCompare(b.expected_close_date || '');
+      default: return 0;
+    }
+  });
+}
 
 export default function Pipeline() {
   const { data: opportunities, isLoading } = useOpportunities();
+  const [visibleStages, setVisibleStages] = useState<Set<string>>(new Set(ALL_STAGES));
+  const [sortBy, setSortBy] = useState<SortOption>('tcv_desc');
+
+  const toggleStage = (stage: string) => {
+    setVisibleStages(prev => {
+      const next = new Set(prev);
+      if (next.has(stage)) next.delete(stage);
+      else next.add(stage);
+      return next;
+    });
+  };
 
   const columns = useMemo(() => {
     if (!opportunities) return [];
-    const stages = ['P1', 'P2', 'P3', 'P4', 'P5'];
-    return stages.map(stage => ({
-      stage,
-      opps: opportunities.filter(o => o.stage === stage),
-      totalTCV: opportunities.filter(o => o.stage === stage).reduce((s, o) => s + (o.overall_tcv || 0), 0),
-    }));
-  }, [opportunities]);
+    return ALL_STAGES
+      .filter(s => visibleStages.has(s))
+      .map(stage => {
+        const opps = sortOpps(opportunities.filter(o => o.stage === stage), sortBy);
+        return {
+          stage,
+          opps,
+          totalTCV: opps.reduce((s, o) => s + (o.overall_tcv || 0), 0),
+        };
+      });
+  }, [opportunities, visibleStages, sortBy]);
 
   if (isLoading) {
     return (
@@ -32,9 +69,40 @@ export default function Pipeline() {
 
   return (
     <div className="p-6 space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Pipeline Board</h1>
-        <p className="text-sm text-muted-foreground">Kanban view of opportunities by stage</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Pipeline Board</h1>
+          <p className="text-sm text-muted-foreground">Kanban view of opportunities by stage</p>
+        </div>
+        <CreateOpportunityDialog />
+      </div>
+
+      {/* Controls */}
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-muted-foreground">Show stages:</span>
+          {ALL_STAGES.map(stage => (
+            <div key={stage} className="flex items-center gap-1.5">
+              <Checkbox
+                id={`stage-${stage}`}
+                checked={visibleStages.has(stage)}
+                onCheckedChange={() => toggleStage(stage)}
+              />
+              <Label htmlFor={`stage-${stage}`} className="text-sm cursor-pointer">{stage}</Label>
+            </div>
+          ))}
+        </div>
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+          <SelectTrigger className="w-[180px]"><SelectValue placeholder="Sort cards by" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="tcv_desc">TCV: High → Low</SelectItem>
+            <SelectItem value="tcv_asc">TCV: Low → High</SelectItem>
+            <SelectItem value="win_desc">Win %: High → Low</SelectItem>
+            <SelectItem value="win_asc">Win %: Low → High</SelectItem>
+            <SelectItem value="name_asc">Name: A → Z</SelectItem>
+            <SelectItem value="close_asc">Close Date: Earliest</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex gap-4 overflow-x-auto pb-4">
@@ -48,7 +116,7 @@ export default function Pipeline() {
               <span className="text-xs font-medium text-muted-foreground">{formatCurrency(col.totalTCV)}</span>
             </div>
 
-            <div className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
+            <div className="space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto">
               {col.opps.map(opp => (
                 <Link key={opp.id} to={`/opportunities/${opp.id}`}>
                   <Card className="cursor-pointer hover:shadow-md transition-shadow">

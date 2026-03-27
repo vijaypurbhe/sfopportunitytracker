@@ -11,6 +11,7 @@ import Pipeline from "@/pages/Pipeline";
 import Opportunities from "@/pages/Opportunities";
 import OpportunityDetail from "@/pages/OpportunityDetail";
 import Accounts from "@/pages/Accounts";
+import AccountDetail from "@/pages/AccountDetail";
 import Gates from "@/pages/Gates";
 import AIInsights from "@/pages/AIInsights";
 import Notifications from "@/pages/Notifications";
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="opportunities" element={<Opportunities />} />
               <Route path="opportunities/:id" element={<OpportunityDetail />} />
               <Route path="accounts" element={<Accounts />} />
+              <Route path="accounts/:name" element={<AccountDetail />} />
               <Route path="gates" element={<Gates />} />
               <Route path="ai-insights" element={<AIInsights />} />
               <Route path="notifications" element={<Notifications />} />
