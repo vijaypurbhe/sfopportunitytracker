@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
@@ -8,7 +8,7 @@ import {
   BarChart3, LayoutDashboard, Kanban, List, Building2,
   Bell, Settings, LogOut, ChevronLeft, ChevronRight, Sparkles, ShieldCheck
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 const navItems = [
@@ -27,6 +27,8 @@ export default function AppLayout() {
   const { user, signOut } = useAuth();
   const location = useLocation();
 
+  const queryClient = useQueryClient();
+
   const { data: unreadCount } = useQuery({
     queryKey: ['unread-notifications', user?.id],
     queryFn: async () => {
@@ -40,6 +42,19 @@ export default function AppLayout() {
     },
     refetchInterval: 30000,
   });
+
+  // Realtime notifications
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('notifications-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['unread-notifications'] });
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, queryClient]);
 
   return (
     <div className="flex h-screen overflow-hidden">
