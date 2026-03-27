@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 
 import { Link } from 'react-router-dom';
 import { useOpportunities } from '@/hooks/useOpportunities';
+import { useRegionFilter } from '@/hooks/useRegionFilter';
 import { formatCurrency, formatDate, getStageColor, formatPercent } from '@/lib/format';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +27,7 @@ export default function Opportunities() {
   const [ownerMode, setOwnerMode] = useState<FilterMode>('include');
   const [sortField, setSortField] = useState<string>('updated_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-  const [regionFilter, setRegionFilter] = useState('all');
+  const { regionFilter, setRegionFilter } = useRegionFilter();
 
   const industries = useMemo(() => {
     if (!opportunities) return [];

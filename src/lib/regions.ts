@@ -29,6 +29,8 @@ const REGION_MAP: Record<string, string> = {
 export const REGIONS = ['AMER', 'EMEA', 'APAC'] as const;
 export type Region = typeof REGIONS[number];
 
+export const REGION_STORAGE_KEY = 'crm-region-filter';
+
 export function getRegion(country: string | null | undefined): string {
   if (!country) return 'Unknown';
   // Try exact match first
@@ -39,6 +41,19 @@ export function getRegion(country: string | null | undefined): string {
     if (key.toLowerCase() === lower) return region;
   }
   return 'Other';
+}
+
+export function getPersistedRegion(): string {
+  if (typeof window === 'undefined') return 'all';
+  const value = window.localStorage.getItem(REGION_STORAGE_KEY);
+  return value === 'all' || REGIONS.includes(value as Region) ? value : 'all';
+}
+
+export function setPersistedRegion(region: string): void {
+  if (typeof window === 'undefined') return;
+  const next = region === 'all' || REGIONS.includes(region as Region) ? region : 'all';
+  window.localStorage.setItem(REGION_STORAGE_KEY, next);
+  window.dispatchEvent(new CustomEvent('crm-region-changed', { detail: next }));
 }
 
 export function filterByRegion<T extends { country?: string | null }>(

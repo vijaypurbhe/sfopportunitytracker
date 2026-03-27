@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useOpportunities } from '@/hooks/useOpportunities';
+import { useRegionFilter } from '@/hooks/useRegionFilter';
 import { formatCurrency, formatPercent, getStageColor, getStageName, ALL_STAGES, isActiveStage } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -170,7 +171,7 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef, regionFilter }: { ti
 export default function Dashboard() {
   const navigate = useNavigate();
   const { data: opportunities, isLoading } = useOpportunities();
-  const [regionFilter, setRegionFilter] = useState('all');
+  const { regionFilter, setRegionFilter } = useRegionFilter();
   const opps = useMemo(() => filterByRegion(opportunities || [], regionFilter), [opportunities, regionFilter]);
 
   const tileRef1 = useRef<HTMLDivElement>(null);

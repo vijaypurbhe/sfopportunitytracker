@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useOpportunities } from '@/hooks/useOpportunities';
+import { useRegionFilter } from '@/hooks/useRegionFilter';
 import { formatCurrency, getStageColor } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,7 +35,7 @@ export default function Pipeline() {
   const { data: opportunities, isLoading } = useOpportunities();
   const [visibleStages, setVisibleStages] = useState<Set<string>>(new Set(ALL_STAGES));
   const [sortBy, setSortBy] = useState<SortOption>('tcv_desc');
-  const [regionFilter, setRegionFilter] = useState('all');
+  const { regionFilter, setRegionFilter } = useRegionFilter();
 
   const filteredOpps = useMemo(() => filterByRegion(opportunities || [], regionFilter), [opportunities, regionFilter]);
 
