@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
@@ -8,7 +8,7 @@ import {
   BarChart3, LayoutDashboard, Kanban, List, Building2,
   Bell, Settings, LogOut, ChevronLeft, ChevronRight, Sparkles, ShieldCheck
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 const navItems = [

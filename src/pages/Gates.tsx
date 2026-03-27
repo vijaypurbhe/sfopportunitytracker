@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { useGateApprovals } from '@/hooks/useGates';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Skeleton } from '@/components/ui/skeleton';
 import { ShieldCheck, Clock, CheckCircle, XCircle } from 'lucide-react';
 import GateApprovalCard from '@/components/GateApprovalCard';
 
