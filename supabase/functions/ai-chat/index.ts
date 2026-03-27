@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,20 +10,112 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, context } = await req.json();
+    const { messages, context, pipelineData } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `You are an AI sales assistant for Pipeline CRM, an enterprise IT services sales management platform. You help sales teams analyze their pipeline, provide deal insights, and recommend actions.
+    // Query actual data from the database for grounding
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const sb = createClient(supabaseUrl, supabaseKey);
+
+    // Get summary stats from the database
+    const { data: opps, error: dbErr } = await sb
+      .from("opportunities")
+      .select("opportunity_name, stage, sales_stage, overall_tcv, win_probability, account_name, primary_industry, country, expected_close_date, acv_fy_23_24, acv_fy_24_25, acv_fy_25_26, acv_fy_26_27, acv_fy_27_28, type_of_business, competitor_name, pricing_model, total_resources, ebitda_percent, contract_tenure_months, account_ibg, account_ibu, account_sbu, bid_manager, opportunity_owner")
+      .order("overall_tcv", { ascending: false, nullsFirst: false })
+      .limit(1000);
+
+    if (dbErr) console.error("DB query error:", dbErr);
+
+    const allOpps = opps || [];
+
+    // Compute grounded stats
+    const activeStages = ['P-1', 'P0', 'P1', 'P2', 'P3', 'P4'];
+    const activeOpps = allOpps.filter(o => activeStages.includes(o.stage || ''));
+    const totalTCV = activeOpps.reduce((s, o) => s + (Number(o.overall_tcv) || 0), 0);
+    const wonDeals = allOpps.filter(o => o.stage === 'P5' || (o.sales_stage && o.sales_stage.includes('Won')));
+    const lostDeals = allOpps.filter(o => o.sales_stage?.includes('Lost') || o.stage === 'Lost');
+    const winRate = allOpps.length > 0 ? (wonDeals.length / allOpps.length * 100).toFixed(1) : '0';
+    const avgWinProb = activeOpps.length
+      ? (activeOpps.reduce((s, o) => s + (o.win_probability || 0), 0) / activeOpps.length).toFixed(1)
+      : '0';
+
+    // Stage distribution
+    const stageCounts: Record<string, { count: number; tcv: number }> = {};
+    allOpps.forEach(o => {
+      const st = o.stage || 'Unknown';
+      if (!stageCounts[st]) stageCounts[st] = { count: 0, tcv: 0 };
+      stageCounts[st].count++;
+      stageCounts[st].tcv += Number(o.overall_tcv) || 0;
+    });
+
+    // Industry distribution
+    const industryCounts: Record<string, number> = {};
+    allOpps.forEach(o => {
+      const ind = o.primary_industry || 'Unknown';
+      industryCounts[ind] = (industryCounts[ind] || 0) + 1;
+    });
+
+    // Top deals
+    const topDeals = allOpps.slice(0, 15).map(o => ({
+      name: o.opportunity_name,
+      account: o.account_name,
+      stage: o.stage,
+      tcv: o.overall_tcv,
+      winProb: o.win_probability,
+      industry: o.primary_industry,
+      country: o.country,
+      closeDate: o.expected_close_date,
+    }));
+
+    // ACV by FY
+    const acvFY = {
+      'FY23-24': allOpps.reduce((s, o) => s + (o.acv_fy_23_24 || 0), 0),
+      'FY24-25': allOpps.reduce((s, o) => s + (o.acv_fy_24_25 || 0), 0),
+      'FY25-26': allOpps.reduce((s, o) => s + (o.acv_fy_25_26 || 0), 0),
+      'FY26-27': allOpps.reduce((s, o) => s + (o.acv_fy_26_27 || 0), 0),
+      'FY27-28': allOpps.reduce((s, o) => s + (o.acv_fy_27_28 || 0), 0),
+    };
+
+    const dataContext = `
+## ACTUAL PIPELINE DATA (Use ONLY these numbers — never make up data)
+- Total opportunities: ${allOpps.length}
+- Active deals (P-1 to P4): ${activeOpps.length}
+- Active pipeline TCV: $${(totalTCV / 1e6).toFixed(2)}M (${totalTCV.toFixed(0)} USD)
+- Won deals: ${wonDeals.length}
+- Lost deals: ${lostDeals.length}
+- Win rate: ${winRate}%
+- Avg win probability (active): ${avgWinProb}%
+
+### Stage Distribution
+${Object.entries(stageCounts).sort((a, b) => b[1].count - a[1].count).map(([st, d]) => `- ${st}: ${d.count} deals, TCV $${(d.tcv / 1e6).toFixed(2)}M`).join('\n')}
+
+### Industry Distribution (top 10)
+${Object.entries(industryCounts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([ind, c]) => `- ${ind}: ${c} deals`).join('\n')}
+
+### ACV by Fiscal Year
+${Object.entries(acvFY).map(([fy, v]) => `- ${fy}: $${(v / 1e6).toFixed(2)}M`).join('\n')}
+
+### Top 15 Deals by TCV
+${topDeals.map(d => `- ${d.name} | ${d.account} | Stage: ${d.stage} | TCV: $${((d.tcv || 0) / 1e6).toFixed(2)}M | Win%: ${d.winProb || 0} | ${d.industry} | ${d.country} | Close: ${d.closeDate || 'N/A'}`).join('\n')}
+`;
+
+    // If extra data was passed from the frontend (e.g. tile-specific data), include it
+    const extraContext = pipelineData ? `\n### Additional Context from Dashboard\n${pipelineData}\n` : '';
+
+    const systemPrompt = `You are an AI sales assistant for Pipeline CRM. You have access to REAL pipeline data below. 
+
+CRITICAL RULES:
+1. ONLY use the numbers and data provided below. NEVER invent, estimate, or hallucinate any numbers.
+2. If asked about something not in the data, say "I don't have that specific data available."
+3. Always cite actual numbers from the data when answering.
+4. Be concise and actionable (use bullet points, tables when helpful).
+5. Reference specific deal names, stages, and metrics from the actual data.
 
 Current page context: ${context || 'General CRM usage'}
 
-Guidelines:
-- Be concise and actionable (2-3 sentences max unless asked for detail)
-- Reference specific metrics, stages (P1-P5), and deal characteristics
-- Focus on sales outcomes: win rates, TCV, risk mitigation
-- Suggest next-best-actions when relevant
-- Use professional but approachable tone`;
+${dataContext}${extraContext}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

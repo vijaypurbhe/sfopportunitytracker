@@ -41,7 +41,11 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef }: { tileTitle: strin
     setResponse('');
     try {
       const { data, error } = await supabase.functions.invoke('ai-chat', {
-        body: { messages: [{ role: 'user', content: `Regarding the "${tileTitle}" metric with data: ${tileData}. User asks: ${q || 'Give me a quick insight about this metric.'}` }] },
+        body: {
+          messages: [{ role: 'user', content: q || `Give me a quick insight about the "${tileTitle}" metric.` }],
+          context: `User is on the Dashboard, looking at the "${tileTitle}" tile.`,
+          pipelineData: `Tile "${tileTitle}" shows: ${tileData}`,
+        },
       });
       if (error) throw error;
       setResponse(data?.response || 'No insights available.');
