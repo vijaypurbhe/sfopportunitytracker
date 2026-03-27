@@ -30,7 +30,7 @@ export function isActiveStage(stage: string | null | undefined, salesStage?: str
   const lowerSales = (salesStage || '').toLowerCase();
   // Exclude P5 (won), and any deal marked as won, lost, or aborted
   if (stage === 'P5' || lowerStage === 'lost' || lowerStage === 'aborted' || lowerStage === 'hibernate') return false;
-  if (lowerSales.includes('won') || lowerSales.includes('lost') || lowerSales.includes('abort')) return false;
+  if (lowerSales.includes('won') || lowerSales.includes('lost') || lowerSales.includes('abort') || lowerSales.includes('hibernate')) return false;
   return true;
 }
 
