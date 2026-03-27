@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import { useOpportunities } from '@/hooks/useOpportunities';
