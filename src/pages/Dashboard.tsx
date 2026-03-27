@@ -40,21 +40,29 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef, regionFilter }: { ti
   }, [open, anchorRef]);
 
   const askAgent = async (q: string) => {
+    const userContent = q || `Give me a quick insight about the "${tileTitle}" metric.`;
+    const updatedHistory = [...conversationHistory, { role: 'user' as const, content: userContent }];
+    setConversationHistory(updatedHistory);
     setLoading(true);
     setResponse('');
+    setQuery('');
     try {
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
-          messages: [{ role: 'user', content: q || `Give me a quick insight about the "${tileTitle}" metric.` }],
+          messages: updatedHistory,
           context: `User is on the Dashboard, looking at the "${tileTitle}" tile.${regionFilter && regionFilter !== 'all' ? ` Filtered to ${regionFilter} region ONLY.` : ''}`,
           pipelineData: `Tile "${tileTitle}" shows: ${tileData}`,
           regionFilter: regionFilter || 'all',
         },
       });
       if (error) throw error;
-      setResponse(data?.response || 'No insights available.');
+      const assistantContent = data?.response || 'No insights available.';
+      setConversationHistory(prev => [...prev, { role: 'assistant', content: assistantContent }]);
+      setResponse(assistantContent);
     } catch {
-      setResponse('Unable to generate insight right now.');
+      const errMsg = 'Unable to generate insight right now.';
+      setConversationHistory(prev => [...prev, { role: 'assistant', content: errMsg }]);
+      setResponse(errMsg);
     } finally {
       setLoading(false);
     }
