@@ -44,7 +44,7 @@ export default function AppLayout() {
   });
 
   // Realtime notifications
-  useState(() => {
+  useEffect(() => {
     if (!user) return;
     const channel = supabase
       .channel('notifications-realtime')
@@ -54,7 +54,7 @@ export default function AppLayout() {
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  });
+  }, [user, queryClient]);
 
   return (
     <div className="flex h-screen overflow-hidden">
