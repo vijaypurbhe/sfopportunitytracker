@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Sparkles, AlertTriangle, TrendingUp, Lightbulb, RefreshCw, BarChart3 } from 'lucide-react';
-import { supabase as _sb } from '@/integrations/supabase/client';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 

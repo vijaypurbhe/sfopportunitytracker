@@ -27,6 +27,8 @@ export default function AppLayout() {
   const { user, signOut } = useAuth();
   const location = useLocation();
 
+  const queryClient = useQueryClient();
+
   const { data: unreadCount } = useQuery({
     queryKey: ['unread-notifications', user?.id],
     queryFn: async () => {
@@ -39,6 +41,19 @@ export default function AppLayout() {
       return count ?? 0;
     },
     refetchInterval: 30000,
+  });
+
+  // Realtime notifications
+  useState(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('notifications-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['unread-notifications'] });
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   });
 
   return (
