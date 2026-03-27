@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from 'react';
 import { useOpportunities } from '@/hooks/useOpportunities';
-import { formatCurrency, formatPercent, getStageColor, getStageName } from '@/lib/format';
+import { formatCurrency, formatPercent, getStageColor, getStageName, ALL_STAGES, isActiveStage } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
