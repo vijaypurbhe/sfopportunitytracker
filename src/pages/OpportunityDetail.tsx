@@ -1,16 +1,20 @@
 import { useParams, Link } from 'react-router-dom';
 import { useOpportunity, useUpdateOpportunity } from '@/hooks/useOpportunities';
+import { useGateApprovals } from '@/hooks/useGates';
 import { formatCurrency, formatDate, getStageColor, formatPercent, getStageName } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Building2, DollarSign, Globe, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, Building2, DollarSign, Globe, Calendar, FileText, ShieldCheck } from 'lucide-react';
+import RequestGateDialog from '@/components/RequestGateDialog';
+import GateApprovalCard from '@/components/GateApprovalCard';
 
 export default function OpportunityDetail() {
   const { id } = useParams<{ id: string }>();
   const { data: opp, isLoading } = useOpportunity(id!);
+  const { data: gates } = useGateApprovals(id);
   const _updateOpp = useUpdateOpportunity();
 
   if (isLoading || !opp) {
@@ -37,6 +41,7 @@ export default function OpportunityDetail() {
           </div>
         </div>
         <div className="flex gap-2">
+          <RequestGateDialog opportunityId={opp.id} opportunityName={opp.opportunity_name} currentStage={opp.stage} />
           <Button variant="outline" size="sm">Edit</Button>
         </div>
       </div>
@@ -67,6 +72,14 @@ export default function OpportunityDetail() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="financials">Financials</TabsTrigger>
           <TabsTrigger value="account">Account Info</TabsTrigger>
+          <TabsTrigger value="gates">
+            Gates
+            {gates?.filter(g => g.status === 'pending').length ? (
+              <Badge variant="destructive" className="ml-1.5 h-5 min-w-[20px] text-xs">
+                {gates.filter(g => g.status === 'pending').length}
+              </Badge>
+            ) : null}
+          </TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
         </TabsList>
 
@@ -193,6 +206,25 @@ export default function OpportunityDetail() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="gates" className="space-y-4 mt-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">{gates?.length || 0} gate requests</p>
+            <RequestGateDialog opportunityId={opp.id} opportunityName={opp.opportunity_name} currentStage={opp.stage} />
+          </div>
+          {!gates?.length ? (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                <ShieldCheck className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                <p className="text-sm">No gate approvals requested yet</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {gates.map(gate => <GateApprovalCard key={gate.id} gate={gate} />)}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="timeline" className="mt-4">
