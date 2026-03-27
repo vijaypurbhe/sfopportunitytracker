@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { formatCurrency, formatPercent, getStageColor, getStageName, ALL_STAGES, isActiveStage } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
