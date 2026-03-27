@@ -96,24 +96,30 @@ export default function Opportunities() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search opportunities..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Select value={stageFilter} onValueChange={setStageFilter}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Stage" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Stages</SelectItem>
-            <SelectItem value="P1">P1</SelectItem>
-            <SelectItem value="P2">P2</SelectItem>
-            <SelectItem value="P3">P3</SelectItem>
-            <SelectItem value="P4">P4</SelectItem>
-            <SelectItem value="P5">P5</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={industryFilter} onValueChange={setIndustryFilter}>
-          <SelectTrigger className="w-[180px]"><SelectValue placeholder="Industry" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Industries</SelectItem>
-            {industries.map(ind => <SelectItem key={ind} value={ind}>{ind}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          label="Stage"
+          options={ALL_STAGES}
+          selected={stageSelected}
+          mode={stageMode}
+          onSelectionChange={setStageSelected}
+          onModeChange={setStageMode}
+        />
+        <MultiSelectFilter
+          label="Industry"
+          options={industries}
+          selected={industrySelected}
+          mode={industryMode}
+          onSelectionChange={setIndustrySelected}
+          onModeChange={setIndustryMode}
+        />
+        <MultiSelectFilter
+          label="Owner"
+          options={owners}
+          selected={ownerSelected}
+          mode={ownerMode}
+          onSelectionChange={setOwnerSelected}
+          onModeChange={setOwnerMode}
+        />
         <RegionFilter value={regionFilter} onChange={setRegionFilter} />
       </div>
 
