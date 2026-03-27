@@ -171,7 +171,7 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef, regionFilter }: { ti
 export default function Dashboard() {
   const navigate = useNavigate();
   const { data: opportunities, isLoading } = useOpportunities();
-  const [regionFilter, setRegionFilter] = useState('all');
+  const { regionFilter, setRegionFilter } = useRegionFilter();
   const opps = useMemo(() => filterByRegion(opportunities || [], regionFilter), [opportunities, regionFilter]);
 
   const tileRef1 = useRef<HTMLDivElement>(null);

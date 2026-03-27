@@ -27,7 +27,7 @@ export default function Opportunities() {
   const [ownerMode, setOwnerMode] = useState<FilterMode>('include');
   const [sortField, setSortField] = useState<string>('updated_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-  const [regionFilter, setRegionFilter] = useState('all');
+  const { regionFilter, setRegionFilter } = useRegionFilter();
 
   const industries = useMemo(() => {
     if (!opportunities) return [];

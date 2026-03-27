@@ -18,7 +18,7 @@ export default function Accounts() {
   const { data: opportunities, isLoading } = useOpportunities();
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('tcv_desc');
-  const [regionFilter, setRegionFilter] = useState('all');
+  const { regionFilter, setRegionFilter } = useRegionFilter();
 
   const accounts = useMemo(() => {
     if (!opportunities) return [];

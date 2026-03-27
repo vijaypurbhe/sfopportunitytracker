@@ -35,7 +35,7 @@ export default function Pipeline() {
   const { data: opportunities, isLoading } = useOpportunities();
   const [visibleStages, setVisibleStages] = useState<Set<string>>(new Set(ALL_STAGES));
   const [sortBy, setSortBy] = useState<SortOption>('tcv_desc');
-  const [regionFilter, setRegionFilter] = useState('all');
+  const { regionFilter, setRegionFilter } = useRegionFilter();
 
   const filteredOpps = useMemo(() => filterByRegion(opportunities || [], regionFilter), [opportunities, regionFilter]);
 
