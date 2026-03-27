@@ -1,4 +1,5 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { formatCurrency, formatPercent, getStageColor, getStageName, ALL_STAGES, isActiveStage } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,14 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef }: { tileTitle: strin
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
+
+  useEffect(() => {
+    if (open && anchorRef.current) {
+      const rect = anchorRef.current.getBoundingClientRect();
+      setPos({ top: rect.top, left: rect.left, width: Math.max(rect.width, 420) });
+    }
+  }, [open, anchorRef]);
 
   const askAgent = async (q: string) => {
     setLoading(true);
@@ -55,36 +64,81 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef }: { tileTitle: strin
   }
 
   return (
-    <div className="absolute top-0 right-0 left-0 z-20 rounded-2xl bg-white/95 backdrop-blur-xl border border-[hsl(217,91%,60%,0.2)] p-4 flex flex-col shadow-xl" style={{ minHeight: '220px' }}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-[hsl(217,91%,60%)]" />
-          <span className="text-xs font-semibold text-[hsl(217,91%,60%)]">AI Insight</span>
-        </div>
-        <button onClick={() => setOpen(false)} className="p-1 hover:bg-muted rounded">
-          <X className="h-3 w-3 text-muted-foreground" />
-        </button>
-      </div>
-      <div className="flex-1 overflow-y-auto text-xs text-foreground/80 leading-relaxed mb-2">
-        {loading ? (
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Loader2 className="h-3 w-3 animate-spin" /> Analyzing...
+    <>
+      {/* Backdrop overlay with blur */}
+      <div
+        className="fixed inset-0 z-[100] bg-black/20 backdrop-blur-sm animate-in fade-in duration-200"
+        onClick={() => setOpen(false)}
+      />
+      {/* Floating card anchored to tile position */}
+      <div
+        className="fixed z-[101] flex flex-col rounded-2xl bg-white/95 backdrop-blur-2xl border border-[hsl(217,91%,60%,0.15)] shadow-2xl shadow-[hsl(217,91%,60%,0.12)] animate-in zoom-in-95 fade-in duration-200"
+        style={{
+          top: pos ? `${pos.top}px` : '20%',
+          left: pos ? `${pos.left}px` : '25%',
+          width: pos ? `${pos.width}px` : '420px',
+          maxHeight: '70vh',
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/30">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-[hsl(217,91%,60%,0.1)]">
+              <Sparkles className="h-4 w-4 text-[hsl(217,91%,60%)]" />
+            </div>
+            <div>
+              <span className="text-sm font-semibold text-foreground">AI Insight</span>
+              <p className="text-[10px] text-muted-foreground">{tileTitle}</p>
+            </div>
           </div>
-        ) : response}
+          <button onClick={() => setOpen(false)} className="p-1.5 hover:bg-muted rounded-lg transition-colors">
+            <X className="h-4 w-4 text-muted-foreground" />
+          </button>
+        </div>
+
+        {/* Response body */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 min-h-[120px] max-h-[45vh]">
+          {loading ? (
+            <div className="flex items-center gap-2.5 text-muted-foreground py-6 justify-center">
+              <Loader2 className="h-4 w-4 animate-spin text-[hsl(217,91%,60%)]" />
+              <span className="text-sm">Analyzing {tileTitle.toLowerCase()}...</span>
+            </div>
+          ) : (
+            <div className="prose prose-sm max-w-none text-foreground/85 leading-relaxed
+              prose-headings:text-foreground prose-headings:font-semibold prose-headings:mt-3 prose-headings:mb-1.5
+              prose-strong:text-foreground prose-strong:font-semibold
+              prose-p:my-1.5 prose-p:text-[13px]
+              prose-ul:my-1.5 prose-ul:text-[13px] prose-li:my-0.5
+              prose-ol:my-1.5 prose-ol:text-[13px]
+              prose-table:text-[12px] prose-th:px-2 prose-th:py-1 prose-th:bg-muted/50 prose-th:font-semibold
+              prose-td:px-2 prose-td:py-1 prose-td:border-t prose-td:border-border/30
+              prose-code:text-[12px] prose-code:bg-muted/50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded">
+              <ReactMarkdown>{response}</ReactMarkdown>
+            </div>
+          )}
+        </div>
+
+        {/* Input area */}
+        <div className="px-5 py-3.5 border-t border-border/30">
+          <div className="flex gap-2">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && askAgent(query)}
+              placeholder="Ask a follow-up..."
+              className="flex-1 text-sm px-3 py-2 rounded-xl border border-border/50 bg-background/50 focus:outline-none focus:ring-2 focus:ring-[hsl(217,91%,60%,0.3)] focus:border-[hsl(217,91%,60%,0.5)] placeholder:text-muted-foreground/60"
+            />
+            <button
+              onClick={() => askAgent(query)}
+              disabled={loading}
+              className="px-3 py-2 rounded-xl bg-[hsl(217,91%,60%)] text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
       </div>
-      <div className="flex gap-1.5">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && askAgent(query)}
-          placeholder="Ask a follow-up..."
-          className="flex-1 text-xs px-2 py-1.5 rounded-lg border border-border bg-background/50 focus:outline-none focus:ring-1 focus:ring-[hsl(217,91%,60%,0.3)]"
-        />
-        <button onClick={() => askAgent(query)} className="p-1.5 rounded-lg bg-[hsl(217,91%,60%)] text-white hover:opacity-90">
-          <Send className="h-3 w-3" />
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
 

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Sparkles, X, Send, Loader2, MessageSquare } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { supabase } from '@/integrations/supabase/client';
 
 type Message = { role: 'user' | 'assistant'; content: string };
@@ -126,7 +127,11 @@ export default function FloatingAIChat() {
                 ? 'bg-[hsl(217,91%,60%)] text-white rounded-br-md'
                 : 'bg-white/70 border border-white/30 text-foreground rounded-bl-md'
             }`}>
-              {msg.content}
+              {msg.role === 'assistant' ? (
+                <div className="prose prose-sm max-w-none prose-p:my-1 prose-p:text-[13px] prose-strong:text-foreground prose-ul:my-1 prose-li:my-0.5 prose-headings:text-sm prose-headings:font-semibold prose-headings:mt-2 prose-headings:mb-1 prose-table:text-[12px] prose-th:px-2 prose-th:py-1 prose-th:bg-muted/30 prose-td:px-2 prose-td:py-1 prose-code:text-[12px] prose-code:bg-muted/40 prose-code:px-1 prose-code:rounded">
+                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                </div>
+              ) : msg.content}
             </div>
           </div>
         ))}
