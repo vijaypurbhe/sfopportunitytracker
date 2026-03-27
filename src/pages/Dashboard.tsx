@@ -29,6 +29,7 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef, regionFilter }: { ti
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
+  const [conversationHistory, setConversationHistory] = useState<Array<{role: 'user' | 'assistant'; content: string}>>([]);
   const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
 
   useEffect(() => {
