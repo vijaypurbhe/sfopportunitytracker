@@ -6,14 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Building2, DollarSign, Globe, Users, Calendar, FileText } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft, Building2, DollarSign, Globe, Calendar, FileText } from 'lucide-react';
 
 export default function OpportunityDetail() {
   const { id } = useParams<{ id: string }>();
   const { data: opp, isLoading } = useOpportunity(id!);
-  const updateOpp = useUpdateOpportunity();
-  const { toast } = useToast();
+  const _updateOpp = useUpdateOpportunity();
 
   if (isLoading || !opp) {
     return (

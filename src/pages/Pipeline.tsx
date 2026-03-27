@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { formatCurrency, getStageColor } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 

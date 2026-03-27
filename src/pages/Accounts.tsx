@@ -1,8 +1,7 @@
 import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { formatCurrency } from '@/lib/format';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Building2 } from 'lucide-react';
