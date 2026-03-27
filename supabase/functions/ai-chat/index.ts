@@ -10,7 +10,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, context, pipelineData, entityType, entityId } = await req.json();
+    const { messages, context, pipelineData, entityType, entityId, regionFilter } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -28,7 +28,41 @@ serve(async (req) => {
 
     if (dbErr) console.error("DB query error:", dbErr);
 
-    const allOpps = opps || [];
+    // Region mapping (mirrors frontend src/lib/regions.ts)
+    const REGION_MAP: Record<string, string> = {
+      'United States': 'AMER', 'USA': 'AMER', 'US': 'AMER', 'Canada': 'AMER', 'Mexico': 'AMER',
+      'Brazil': 'AMER', 'Argentina': 'AMER', 'Chile': 'AMER', 'Colombia': 'AMER', 'Peru': 'AMER',
+      'Costa Rica': 'AMER', 'Panama': 'AMER', 'Puerto Rico': 'AMER', 'Ecuador': 'AMER',
+      'United Kingdom': 'EMEA', 'UK': 'EMEA', 'Germany': 'EMEA', 'France': 'EMEA', 'Italy': 'EMEA',
+      'Spain': 'EMEA', 'Netherlands': 'EMEA', 'Switzerland': 'EMEA', 'Sweden': 'EMEA',
+      'Norway': 'EMEA', 'Denmark': 'EMEA', 'Finland': 'EMEA', 'Belgium': 'EMEA', 'Austria': 'EMEA',
+      'Ireland': 'EMEA', 'Poland': 'EMEA', 'Portugal': 'EMEA', 'Czech Republic': 'EMEA',
+      'South Africa': 'EMEA', 'Nigeria': 'EMEA', 'Kenya': 'EMEA', 'Egypt': 'EMEA',
+      'Israel': 'EMEA', 'UAE': 'EMEA', 'United Arab Emirates': 'EMEA', 'Saudi Arabia': 'EMEA',
+      'Qatar': 'EMEA', 'Kuwait': 'EMEA', 'Bahrain': 'EMEA', 'Turkey': 'EMEA',
+      'Russia': 'EMEA', 'Ukraine': 'EMEA',
+      'India': 'APAC', 'China': 'APAC', 'Japan': 'APAC', 'Australia': 'APAC',
+      'South Korea': 'APAC', 'Singapore': 'APAC', 'Hong Kong': 'APAC', 'Taiwan': 'APAC',
+      'Malaysia': 'APAC', 'Indonesia': 'APAC', 'Thailand': 'APAC', 'Vietnam': 'APAC',
+      'Philippines': 'APAC', 'New Zealand': 'APAC', 'Bangladesh': 'APAC', 'Pakistan': 'APAC',
+      'Sri Lanka': 'APAC',
+    };
+    const getRegion = (country: string | null) => {
+      if (!country) return 'Unknown';
+      if (REGION_MAP[country]) return REGION_MAP[country];
+      const lower = country.toLowerCase();
+      for (const [key, region] of Object.entries(REGION_MAP)) {
+        if (key.toLowerCase() === lower) return region;
+      }
+      return 'Other';
+    };
+
+    // Apply region filter if provided
+    let allOpps = opps || [];
+    const activeRegion = regionFilter && regionFilter !== 'all' ? regionFilter : null;
+    if (activeRegion) {
+      allOpps = allOpps.filter(o => getRegion(o.country) === activeRegion);
+    }
 
     // Compute grounded stats
     // Only these stages are truly active pipeline deals
@@ -79,9 +113,11 @@ serve(async (req) => {
       'FY27-28': allOpps.reduce((s, o) => s + (o.acv_fy_27_28 || 0), 0),
     };
 
+    const regionNote = activeRegion ? `\n**IMPORTANT: Data is FILTERED to ${activeRegion} region only. All numbers below reflect ONLY ${activeRegion} deals.**\n` : '';
+
     const dataContext = `
 ## ACTUAL PIPELINE DATA (Use ONLY these numbers — never make up data)
-NOTE: All TCV and ACV values are already in millions (M). Do NOT divide again.
+NOTE: All TCV and ACV values are already in millions (M). Do NOT divide again.${regionNote}
 
 ### Stage-to-Status Mapping (CRITICAL — use this to classify deals):
 - P-1 = Closed/Lost (INACTIVE — do NOT count as active pipeline)

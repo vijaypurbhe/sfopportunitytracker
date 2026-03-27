@@ -23,7 +23,7 @@ function GlassCard({ children, className = '' }: { children: React.ReactNode; cl
   );
 }
 
-function TileAgentPopover({ tileTitle, tileData, anchorRef }: { tileTitle: string; tileData: string; anchorRef: React.RefObject<HTMLDivElement | null> }) {
+function TileAgentPopover({ tileTitle, tileData, anchorRef, regionFilter }: { tileTitle: string; tileData: string; anchorRef: React.RefObject<HTMLDivElement | null>; regionFilter?: string }) {
   const [open, setOpen] = useState(false);
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,8 +44,9 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef }: { tileTitle: strin
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           messages: [{ role: 'user', content: q || `Give me a quick insight about the "${tileTitle}" metric.` }],
-          context: `User is on the Dashboard, looking at the "${tileTitle}" tile.`,
+          context: `User is on the Dashboard, looking at the "${tileTitle}" tile.${regionFilter && regionFilter !== 'all' ? ` Filtered to ${regionFilter} region ONLY.` : ''}`,
           pipelineData: `Tile "${tileTitle}" shows: ${tileData}`,
+          regionFilter: regionFilter || 'all',
         },
       });
       if (error) throw error;
@@ -230,7 +231,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div ref={tileRef1}>
           <GlassCard className="relative">
-            <TileAgentPopover tileTitle="Total Opportunities" tileData={`Count: ${opps.length}`} anchorRef={tileRef1} />
+            <TileAgentPopover tileTitle="Total Opportunities" tileData={`Count: ${opps.length}`} anchorRef={tileRef1} regionFilter={regionFilter} />
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -247,7 +248,7 @@ export default function Dashboard() {
 
         <div ref={tileRef2}>
           <GlassCard className="relative">
-            <TileAgentPopover tileTitle="Total TCV" tileData={`TCV: ${formatCurrency(totalTCV)}`} anchorRef={tileRef2} />
+            <TileAgentPopover tileTitle="Total TCV" tileData={`TCV: ${formatCurrency(totalTCV)}`} anchorRef={tileRef2} regionFilter={regionFilter} />
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -264,7 +265,7 @@ export default function Dashboard() {
 
         <div ref={tileRef3}>
           <GlassCard className="relative">
-            <TileAgentPopover tileTitle="Win Rate" tileData={`Win Rate: ${formatPercent(Math.round(winRate))}, Won Deals: ${wonDeals.length}, Total: ${opps.length}`} anchorRef={tileRef3} />
+            <TileAgentPopover tileTitle="Win Rate" tileData={`Win Rate: ${formatPercent(Math.round(winRate))}, Won Deals: ${wonDeals.length}, Total: ${opps.length}`} anchorRef={tileRef3} regionFilter={regionFilter} />
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -281,7 +282,7 @@ export default function Dashboard() {
 
         <div ref={tileRef4}>
           <GlassCard className="relative">
-            <TileAgentPopover tileTitle="Active Deals" tileData={`Active: ${activeOpps.length}, Avg Win Prob: ${Math.round(avgWinProb)}%`} anchorRef={tileRef4} />
+            <TileAgentPopover tileTitle="Active Deals" tileData={`Active: ${activeOpps.length}, Avg Win Prob: ${Math.round(avgWinProb)}%`} anchorRef={tileRef4} regionFilter={regionFilter} />
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
