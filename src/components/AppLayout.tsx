@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import FloatingAIChat from '@/components/FloatingAIChat';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -119,6 +120,9 @@ export default function AppLayout() {
       <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
+
+      {/* Floating AI Chat */}
+      <FloatingAIChat />
     </div>
   );
 }
