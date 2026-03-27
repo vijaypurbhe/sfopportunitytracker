@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Building2, Search } from 'lucide-react';
+import RegionFilter from '@/components/RegionFilter';
+import { filterByRegion } from '@/lib/regions';
 
 type SortOption = 'tcv_desc' | 'tcv_asc' | 'name_asc' | 'name_desc' | 'opps_desc' | 'opps_asc';
 
@@ -15,11 +17,13 @@ export default function Accounts() {
   const { data: opportunities, isLoading } = useOpportunities();
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('tcv_desc');
+  const [regionFilter, setRegionFilter] = useState('all');
 
   const accounts = useMemo(() => {
     if (!opportunities) return [];
+    const regionFiltered = filterByRegion(opportunities, regionFilter);
     const map = new Map<string, { name: string; owner: string; industry: string; country: string; sbu: string; opps: number; tcv: number; category: string }>();
-    opportunities.forEach(o => {
+    regionFiltered.forEach(o => {
       const name = o.account_name || 'Unknown';
       const existing = map.get(name);
       if (existing) {
@@ -64,7 +68,7 @@ export default function Accounts() {
     });
 
     return list;
-  }, [opportunities, search, sortBy]);
+  }, [opportunities, search, sortBy, regionFilter]);
 
   if (isLoading) {
     return (
@@ -98,6 +102,7 @@ export default function Accounts() {
             <SelectItem value="opps_asc">Deals: Fewest</SelectItem>
           </SelectContent>
         </Select>
+        <RegionFilter value={regionFilter} onChange={setRegionFilter} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
