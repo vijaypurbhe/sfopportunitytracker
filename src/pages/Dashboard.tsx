@@ -231,7 +231,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div ref={tileRef1}>
           <GlassCard className="relative">
-            <TileAgentPopover tileTitle="Total Opportunities" tileData={`Count: ${opps.length}`} anchorRef={tileRef1} />
+            <TileAgentPopover tileTitle="Total Opportunities" tileData={`Count: ${opps.length}`} anchorRef={tileRef1} regionFilter={regionFilter} />
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -248,7 +248,7 @@ export default function Dashboard() {
 
         <div ref={tileRef2}>
           <GlassCard className="relative">
-            <TileAgentPopover tileTitle="Total TCV" tileData={`TCV: ${formatCurrency(totalTCV)}`} anchorRef={tileRef2} />
+            <TileAgentPopover tileTitle="Total TCV" tileData={`TCV: ${formatCurrency(totalTCV)}`} anchorRef={tileRef2} regionFilter={regionFilter} />
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -265,7 +265,7 @@ export default function Dashboard() {
 
         <div ref={tileRef3}>
           <GlassCard className="relative">
-            <TileAgentPopover tileTitle="Win Rate" tileData={`Win Rate: ${formatPercent(Math.round(winRate))}, Won Deals: ${wonDeals.length}, Total: ${opps.length}`} anchorRef={tileRef3} />
+            <TileAgentPopover tileTitle="Win Rate" tileData={`Win Rate: ${formatPercent(Math.round(winRate))}, Won Deals: ${wonDeals.length}, Total: ${opps.length}`} anchorRef={tileRef3} regionFilter={regionFilter} />
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -282,7 +282,7 @@ export default function Dashboard() {
 
         <div ref={tileRef4}>
           <GlassCard className="relative">
-            <TileAgentPopover tileTitle="Active Deals" tileData={`Active: ${activeOpps.length}, Avg Win Prob: ${Math.round(avgWinProb)}%`} anchorRef={tileRef4} />
+            <TileAgentPopover tileTitle="Active Deals" tileData={`Active: ${activeOpps.length}, Avg Win Prob: ${Math.round(avgWinProb)}%`} anchorRef={tileRef4} regionFilter={regionFilter} />
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
