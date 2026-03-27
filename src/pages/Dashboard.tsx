@@ -23,7 +23,7 @@ function GlassCard({ children, className = '' }: { children: React.ReactNode; cl
   );
 }
 
-function TileAgentPopover({ tileTitle, tileData, anchorRef }: { tileTitle: string; tileData: string; anchorRef: React.RefObject<HTMLDivElement | null> }) {
+function TileAgentPopover({ tileTitle, tileData, anchorRef, regionFilter }: { tileTitle: string; tileData: string; anchorRef: React.RefObject<HTMLDivElement | null>; regionFilter?: string }) {
   const [open, setOpen] = useState(false);
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,8 +44,9 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef }: { tileTitle: strin
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           messages: [{ role: 'user', content: q || `Give me a quick insight about the "${tileTitle}" metric.` }],
-          context: `User is on the Dashboard, looking at the "${tileTitle}" tile.`,
+          context: `User is on the Dashboard, looking at the "${tileTitle}" tile.${regionFilter && regionFilter !== 'all' ? ` Filtered to ${regionFilter} region ONLY.` : ''}`,
           pipelineData: `Tile "${tileTitle}" shows: ${tileData}`,
+          regionFilter: regionFilter || 'all',
         },
       });
       if (error) throw error;
