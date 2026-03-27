@@ -113,9 +113,11 @@ serve(async (req) => {
       'FY27-28': allOpps.reduce((s, o) => s + (o.acv_fy_27_28 || 0), 0),
     };
 
+    const regionNote = activeRegion ? `\n**IMPORTANT: Data is FILTERED to ${activeRegion} region only. All numbers below reflect ONLY ${activeRegion} deals.**\n` : '';
+
     const dataContext = `
 ## ACTUAL PIPELINE DATA (Use ONLY these numbers — never make up data)
-NOTE: All TCV and ACV values are already in millions (M). Do NOT divide again.
+NOTE: All TCV and ACV values are already in millions (M). Do NOT divide again.${regionNote}
 
 ### Stage-to-Status Mapping (CRITICAL — use this to classify deals):
 - P-1 = Closed/Lost (INACTIVE — do NOT count as active pipeline)
