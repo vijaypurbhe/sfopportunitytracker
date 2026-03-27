@@ -24,14 +24,10 @@ export function formatDate(date: string | null | undefined): string {
 export const ALL_STAGES = ['P-1', 'P-2', 'P-3', 'P0', 'P1', 'P2', 'P3', 'P3.1', 'P4', 'P5'] as const;
 export const ACTIVE_STAGES = ['P-1', 'P-2', 'P-3', 'P0', 'P1', 'P2', 'P3', 'P3.1', 'P4'] as const;
 
-export function isActiveStage(stage: string | null | undefined, salesStage?: string | null): boolean {
-  if (stage == null) return false;
-  const lowerStage = stage.toLowerCase();
-  const lowerSales = (salesStage || '').toLowerCase();
-  // Exclude P5 (won), and any deal marked as won, lost, or aborted
-  if (stage === 'P5' || lowerStage === 'lost' || lowerStage === 'aborted' || lowerStage === 'hibernate') return false;
-  if (lowerSales.includes('won') || lowerSales.includes('lost') || lowerSales.includes('abort') || lowerSales.includes('hibernate')) return false;
-  return true;
+const ACTIVE_STAGE_SET = new Set(['P0', 'P1', 'P2', 'P3', 'P3.1', 'P4']);
+
+export function isActiveStage(stage: string | null | undefined, _salesStage?: string | null): boolean {
+  return stage != null && ACTIVE_STAGE_SET.has(stage);
 }
 
 export function getStageColor(stage: string | null | undefined): string {

@@ -31,14 +31,9 @@ serve(async (req) => {
     const allOpps = opps || [];
 
     // Compute grounded stats
-    const excludedStages = ['P5', 'Lost', 'Aborted', 'Hibernate'];
-    const activeOpps = allOpps.filter(o => {
-      const stage = o.stage || '';
-      const salesStage = (o.sales_stage || '').toLowerCase();
-      if (excludedStages.includes(stage)) return false;
-      if (salesStage.includes('won') || salesStage.includes('lost') || salesStage.includes('abort') || salesStage.includes('hibernate')) return false;
-      return true;
-    });
+    // Only these stages are truly active pipeline deals
+    const ACTIVE_STAGES = ['P0', 'P1', 'P2', 'P3', 'P3.1', 'P4'];
+    const activeOpps = allOpps.filter(o => ACTIVE_STAGES.includes(o.stage || ''));
     const totalTCV = activeOpps.reduce((s, o) => s + (Number(o.overall_tcv) || 0), 0);
     const wonDeals = allOpps.filter(o => o.stage === 'P5' || (o.sales_stage && o.sales_stage.includes('Won')));
     const lostDeals = allOpps.filter(o => o.sales_stage?.includes('Lost') || o.stage === 'Lost');
@@ -87,11 +82,26 @@ serve(async (req) => {
     const dataContext = `
 ## ACTUAL PIPELINE DATA (Use ONLY these numbers — never make up data)
 NOTE: All TCV and ACV values are already in millions (M). Do NOT divide again.
+
+### Stage-to-Status Mapping (CRITICAL — use this to classify deals):
+- P-1 = Closed/Lost (INACTIVE — do NOT count as active pipeline)
+- P-2 = Aborted-Opportunity (INACTIVE — do NOT count as active pipeline)
+- P-3 = Hibernate/On Hold (INACTIVE — do NOT count as active pipeline)
+- P0 = Opportunity Identified (ACTIVE)
+- P1 = Opportunity Defined & Qualified (ACTIVE)
+- P2 = RFP Responded / Proposal Submitted (ACTIVE)
+- P3 = Technically Shortlisted (ACTIVE)
+- P3.1 = Technically Shortlisted & Strong Upside (ACTIVE)
+- P4 = Commit / Verbal Confirmation (ACTIVE)
+- P5 = Closed/Won (INACTIVE — already won)
+
 - Total opportunities: ${allOpps.length}
-- Active deals (excluding Won/Lost/Aborted/Hibernate): ${activeOpps.length}
+- Active deals (P0-P4 only): ${activeOpps.length}
 - Active pipeline TCV: $${totalTCV.toFixed(2)}M
-- Won deals: ${wonDeals.length}
-- Lost deals: ${lostDeals.length}
+- Won deals (P5): ${wonDeals.length}
+- Lost deals (P-1): ${lostDeals.length}
+- Aborted deals (P-2): ${allOpps.filter(o => o.stage === 'P-2').length}
+- Hibernated deals (P-3): ${allOpps.filter(o => o.stage === 'P-3').length}
 - Win rate: ${winRate}%
 - Avg win probability (active): ${avgWinProb}%
 
