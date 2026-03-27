@@ -111,9 +111,9 @@ export default function Pipeline() {
         </Select>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4">
+      <div className="grid gap-4 pb-4" style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}>
         {columns.map(col => (
-          <div key={col.stage} className="flex-shrink-0 w-72">
+          <div key={col.stage} className="min-w-0">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Badge className={getStageColor(col.stage)}>{col.stage}</Badge>
