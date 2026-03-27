@@ -31,8 +31,14 @@ serve(async (req) => {
     const allOpps = opps || [];
 
     // Compute grounded stats
-    const activeStages = ['P-1', 'P0', 'P1', 'P2', 'P3', 'P4'];
-    const activeOpps = allOpps.filter(o => activeStages.includes(o.stage || ''));
+    const excludedStages = ['P5', 'Lost', 'Aborted', 'Hibernate'];
+    const activeOpps = allOpps.filter(o => {
+      const stage = o.stage || '';
+      const salesStage = (o.sales_stage || '').toLowerCase();
+      if (excludedStages.includes(stage)) return false;
+      if (salesStage.includes('won') || salesStage.includes('lost') || salesStage.includes('abort')) return false;
+      return true;
+    });
     const totalTCV = activeOpps.reduce((s, o) => s + (Number(o.overall_tcv) || 0), 0);
     const wonDeals = allOpps.filter(o => o.stage === 'P5' || (o.sales_stage && o.sales_stage.includes('Won')));
     const lostDeals = allOpps.filter(o => o.sales_stage?.includes('Lost') || o.stage === 'Lost');

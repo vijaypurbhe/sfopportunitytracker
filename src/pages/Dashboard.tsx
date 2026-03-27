@@ -175,7 +175,7 @@ export default function Dashboard() {
     );
   }
 
-  const activeOpps = opps.filter(o => isActiveStage(o.stage));
+  const activeOpps = opps.filter(o => isActiveStage(o.stage, o.sales_stage));
   const totalTCV = activeOpps.reduce((sum, o) => sum + (Number(o.overall_tcv) || 0), 0);
   const avgWinProb = activeOpps.length ? activeOpps.reduce((sum, o) => sum + (o.win_probability || 0), 0) / activeOpps.length : 0;
   const wonDeals = opps.filter(o => o.stage === 'P5' || o.sales_stage?.includes('Won'));
