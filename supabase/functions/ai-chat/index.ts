@@ -121,6 +121,60 @@ ${topDeals.map(d => `- ${d.name} | ${d.account} | Stage: ${d.stage} | TCV: $${(d
     // If extra data was passed from the frontend (e.g. tile-specific data), include it
     const extraContext = pipelineData ? `\n### Additional Context from Dashboard\n${pipelineData}\n` : '';
 
+    // Fetch entity-specific data when viewing a detail page
+    let entityContext = '';
+    if (entityType === 'opportunity' && entityId) {
+      const { data: opp } = await sb
+        .from("opportunities")
+        .select("*")
+        .eq("id", entityId)
+        .single();
+      if (opp) {
+        entityContext = `\n### CURRENT OPPORTUNITY (The user is viewing this specific deal — answer about THIS deal)\n` +
+          `- Name: ${opp.opportunity_name}\n` +
+          `- Account: ${opp.account_name || 'N/A'}\n` +
+          `- Stage: ${opp.stage} (Sales Stage: ${opp.sales_stage || 'N/A'})\n` +
+          `- TCV: $${(opp.overall_tcv || 0).toFixed(2)}M\n` +
+          `- Booking Value TCV: $${(opp.overall_booking_value_tcv || 0).toFixed(2)}M\n` +
+          `- Win Probability: ${opp.win_probability || 0}%\n` +
+          `- Expected Close: ${opp.expected_close_date || 'N/A'}\n` +
+          `- Owner: ${opp.opportunity_owner || 'N/A'}\n` +
+          `- Bid Manager: ${opp.bid_manager || 'N/A'}\n` +
+          `- Industry: ${opp.primary_industry || 'N/A'} / ${opp.secondary_industry || 'N/A'}\n` +
+          `- Country: ${opp.country || 'N/A'}, City: ${opp.city || 'N/A'}\n` +
+          `- SBU: ${opp.account_sbu || 'N/A'}, IBG: ${opp.account_ibg || 'N/A'}, IBU: ${opp.account_ibu || 'N/A'}\n` +
+          `- Category: ${opp.opportunity_category || 'N/A'}\n` +
+          `- Type of Business: ${opp.type_of_business || 'N/A'}\n` +
+          `- Competitor: ${opp.competitor_name || 'N/A'}\n` +
+          `- Pricing Model: ${opp.pricing_model || 'N/A'}\n` +
+          `- EBITDA%: ${opp.ebitda_percent || 'N/A'}\n` +
+          `- Contract Tenure: ${opp.contract_tenure_months || 'N/A'} months\n` +
+          `- Total Resources: ${opp.total_resources || 'N/A'}\n` +
+          `- ACV FY23-24: $${opp.acv_fy_23_24 || 0}M, FY24-25: $${opp.acv_fy_24_25 || 0}M, FY25-26: $${opp.acv_fy_25_26 || 0}M, FY26-27: $${opp.acv_fy_26_27 || 0}M, FY27-28: $${opp.acv_fy_27_28 || 0}M\n` +
+          `- Created: ${opp.opportunity_created_date || 'N/A'}\n` +
+          `- Reason for Win: ${opp.reason_for_win || 'N/A'}\n` +
+          `- Reason for Loss: ${opp.reason_for_loss || 'N/A'}\n` +
+          `- Abort Reason: ${opp.abort_reason || 'N/A'}\n`;
+      }
+    } else if (entityType === 'account' && entityId) {
+      // entityId here is the account_name (URL-encoded)
+      const accountName = decodeURIComponent(entityId);
+      const { data: accOpps } = await sb
+        .from("opportunities")
+        .select("opportunity_name, stage, sales_stage, overall_tcv, win_probability, expected_close_date, primary_industry, bid_manager, opportunity_owner")
+        .eq("account_name", accountName)
+        .order("overall_tcv", { ascending: false, nullsFirst: false })
+        .limit(50);
+      if (accOpps && accOpps.length > 0) {
+        const accActive = accOpps.filter(o => ['P0','P1','P2','P3','P3.1','P4'].includes(o.stage || ''));
+        const accTCV = accActive.reduce((s, o) => s + (Number(o.overall_tcv) || 0), 0);
+        entityContext = `\n### CURRENT ACCOUNT: ${accountName}\n` +
+          `- Total opportunities: ${accOpps.length}\n` +
+          `- Active deals: ${accActive.length}, Active TCV: $${accTCV.toFixed(2)}M\n` +
+          `- Deals:\n${accOpps.map(o => `  - ${o.opportunity_name} | Stage: ${o.stage} | TCV: $${(o.overall_tcv || 0).toFixed(2)}M | Win%: ${o.win_probability || 0} | Close: ${o.expected_close_date || 'N/A'}`).join('\n')}\n`;
+      }
+    }
+
     const systemPrompt = `You are an AI sales assistant for Pipeline CRM. You have access to REAL pipeline data below. 
 
 CRITICAL RULES:
