@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { formatCurrency, formatPercent, getStageColor, getStageName } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,11 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { TrendingUp, DollarSign, Target, Users, AlertTriangle } from 'lucide-react';
+import RegionFilter from '@/components/RegionFilter';
+import { filterByRegion } from '@/lib/regions';
 
 const STAGE_COLORS = ['hsl(217, 91%, 60%)', 'hsl(38, 92%, 50%)', 'hsl(280, 65%, 60%)', 'hsl(142, 71%, 45%)', 'hsl(160, 64%, 40%)'];
 
 export default function Dashboard() {
   const { data: opportunities, isLoading } = useOpportunities();
+  const [regionFilter, setRegionFilter] = useState('all');
 
   if (isLoading) {
     return (
@@ -25,7 +29,7 @@ export default function Dashboard() {
     );
   }
 
-  const opps = opportunities || [];
+  const opps = useMemo(() => filterByRegion(opportunities || [], regionFilter), [opportunities, regionFilter]);
   const activeOpps = opps.filter(o => o.stage !== 'P5' || o.sales_stage?.includes('Won'));
   const totalTCV = opps.reduce((sum, o) => sum + (o.overall_tcv || 0), 0);
   const avgWinProb = opps.length ? opps.reduce((sum, o) => sum + (o.win_probability || 0), 0) / opps.length : 0;
@@ -92,6 +96,7 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground text-sm">{opps.length} opportunities in your pipeline</p>
         </div>
+        <RegionFilter value={regionFilter} onChange={setRegionFilter} />
       </div>
 
       {/* Summary Cards */}

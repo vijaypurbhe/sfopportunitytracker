@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, ArrowUpDown } from 'lucide-react';
 import CreateOpportunityDialog from '@/components/CreateOpportunityDialog';
+import RegionFilter from '@/components/RegionFilter';
+import { filterByRegion } from '@/lib/regions';
 
 export default function Opportunities() {
   const { data: opportunities, isLoading } = useOpportunities();
@@ -17,6 +19,7 @@ export default function Opportunities() {
   const [industryFilter, setIndustryFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<string>('updated_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [regionFilter, setRegionFilter] = useState('all');
 
   const industries = useMemo(() => {
     if (!opportunities) return [];
@@ -25,7 +28,7 @@ export default function Opportunities() {
 
   const filtered = useMemo(() => {
     if (!opportunities) return [];
-    return opportunities
+    return filterByRegion(opportunities, regionFilter)
       .filter(o => {
         if (search) {
           const q = search.toLowerCase();
@@ -52,7 +55,7 @@ export default function Opportunities() {
         const cmp = aVal.localeCompare(bVal);
         return sortDir === 'asc' ? cmp : -cmp;
       });
-  }, [opportunities, search, stageFilter, industryFilter, sortField, sortDir]);
+  }, [opportunities, search, stageFilter, industryFilter, sortField, sortDir, regionFilter]);
 
   const handleSort = (field: string) => {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -102,6 +105,7 @@ export default function Opportunities() {
             {industries.map(ind => <SelectItem key={ind} value={ind}>{ind}</SelectItem>)}
           </SelectContent>
         </Select>
+        <RegionFilter value={regionFilter} onChange={setRegionFilter} />
       </div>
 
       {/* Table */}

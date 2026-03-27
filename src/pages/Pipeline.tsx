@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import CreateOpportunityDialog from '@/components/CreateOpportunityDialog';
+import RegionFilter from '@/components/RegionFilter';
+import { filterByRegion } from '@/lib/regions';
 
 const ALL_STAGES = ['P1', 'P2', 'P3', 'P4', 'P5'];
 
@@ -32,6 +34,9 @@ export default function Pipeline() {
   const { data: opportunities, isLoading } = useOpportunities();
   const [visibleStages, setVisibleStages] = useState<Set<string>>(new Set(ALL_STAGES));
   const [sortBy, setSortBy] = useState<SortOption>('tcv_desc');
+  const [regionFilter, setRegionFilter] = useState('all');
+
+  const filteredOpps = useMemo(() => filterByRegion(opportunities || [], regionFilter), [opportunities, regionFilter]);
 
   const toggleStage = (stage: string) => {
     setVisibleStages(prev => {
@@ -43,18 +48,18 @@ export default function Pipeline() {
   };
 
   const columns = useMemo(() => {
-    if (!opportunities) return [];
+    if (!filteredOpps.length) return [];
     return ALL_STAGES
       .filter(s => visibleStages.has(s))
       .map(stage => {
-        const opps = sortOpps(opportunities.filter(o => o.stage === stage), sortBy);
+        const opps = sortOpps(filteredOpps.filter(o => o.stage === stage), sortBy);
         return {
           stage,
           opps,
           totalTCV: opps.reduce((s, o) => s + (o.overall_tcv || 0), 0),
         };
       });
-  }, [opportunities, visibleStages, sortBy]);
+  }, [filteredOpps, visibleStages, sortBy]);
 
   if (isLoading) {
     return (
@@ -79,6 +84,7 @@ export default function Pipeline() {
 
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-4">
+        <RegionFilter value={regionFilter} onChange={setRegionFilter} />
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-muted-foreground">Show stages:</span>
           {ALL_STAGES.map(stage => (
