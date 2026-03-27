@@ -153,6 +153,7 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef }: { tileTitle: strin
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { data: opportunities, isLoading } = useOpportunities();
   const [regionFilter, setRegionFilter] = useState('all');
   const opps = useMemo(() => filterByRegion(opportunities || [], regionFilter), [opportunities, regionFilter]);
