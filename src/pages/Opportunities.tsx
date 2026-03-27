@@ -4,58 +4,67 @@ import { useOpportunities } from '@/hooks/useOpportunities';
 import { formatCurrency, formatDate, getStageColor, formatPercent } from '@/lib/format';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, ArrowUpDown } from 'lucide-react';
 import CreateOpportunityDialog from '@/components/CreateOpportunityDialog';
 import RegionFilter from '@/components/RegionFilter';
 import { filterByRegion } from '@/lib/regions';
+import MultiSelectFilter, { applyMultiFilter, type FilterMode } from '@/components/MultiSelectFilter';
+
+const ALL_STAGES = ['P1', 'P2', 'P3', 'P4', 'P5'];
 
 export default function Opportunities() {
   const { data: opportunities, isLoading } = useOpportunities();
   const [search, setSearch] = useState('');
-  const [stageFilter, setStageFilter] = useState<string>('all');
-  const [industryFilter, setIndustryFilter] = useState<string>('all');
+  const [stageSelected, setStageSelected] = useState<Set<string>>(new Set());
+  const [stageMode, setStageMode] = useState<FilterMode>('include');
+  const [industrySelected, setIndustrySelected] = useState<Set<string>>(new Set());
+  const [industryMode, setIndustryMode] = useState<FilterMode>('include');
+  const [ownerSelected, setOwnerSelected] = useState<Set<string>>(new Set());
+  const [ownerMode, setOwnerMode] = useState<FilterMode>('include');
   const [sortField, setSortField] = useState<string>('updated_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [regionFilter, setRegionFilter] = useState('all');
 
   const industries = useMemo(() => {
     if (!opportunities) return [];
-    return [...new Set(opportunities.map(o => o.primary_industry).filter(Boolean))] as string[];
+    return [...new Set(opportunities.map(o => o.primary_industry).filter(Boolean))].sort() as string[];
+  }, [opportunities]);
+
+  const owners = useMemo(() => {
+    if (!opportunities) return [];
+    return [...new Set(opportunities.map(o => o.opportunity_owner).filter(Boolean))].sort() as string[];
   }, [opportunities]);
 
   const filtered = useMemo(() => {
     if (!opportunities) return [];
-    return filterByRegion(opportunities, regionFilter)
-      .filter(o => {
-        if (search) {
-          const q = search.toLowerCase();
-          if (
-            !o.opportunity_name?.toLowerCase().includes(q) &&
-            !o.account_name?.toLowerCase().includes(q) &&
-            !o.opportunity_owner?.toLowerCase().includes(q) &&
-            !o.opportunity_id?.toLowerCase().includes(q)
-          ) return false;
-        }
-        if (stageFilter !== 'all' && o.stage !== stageFilter) return false;
-        if (industryFilter !== 'all' && o.primary_industry !== industryFilter) return false;
-        return true;
-      })
-      .sort((a, b) => {
-        const numericFields = ['overall_tcv', 'win_probability', 'ebitda_percent', 'total_resources'];
-        if (numericFields.includes(sortField)) {
-          const aVal = (a as any)[sortField] ?? 0;
-          const bVal = (b as any)[sortField] ?? 0;
-          return sortDir === 'asc' ? aVal - bVal : bVal - aVal;
-        }
-        const aVal = String((a as any)[sortField] || '');
-        const bVal = String((b as any)[sortField] || '');
-        const cmp = aVal.localeCompare(bVal);
-        return sortDir === 'asc' ? cmp : -cmp;
-      });
-  }, [opportunities, search, stageFilter, industryFilter, sortField, sortDir, regionFilter]);
+    let result = filterByRegion(opportunities, regionFilter);
+    result = applyMultiFilter(result, o => o.stage, stageSelected, stageMode);
+    result = applyMultiFilter(result, o => o.primary_industry, industrySelected, industryMode);
+    result = applyMultiFilter(result, o => o.opportunity_owner, ownerSelected, ownerMode);
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(o =>
+        o.opportunity_name?.toLowerCase().includes(q) ||
+        o.account_name?.toLowerCase().includes(q) ||
+        o.opportunity_owner?.toLowerCase().includes(q) ||
+        o.opportunity_id?.toLowerCase().includes(q)
+      );
+    }
+    return result.sort((a, b) => {
+      const numericFields = ['overall_tcv', 'win_probability', 'ebitda_percent', 'total_resources'];
+      if (numericFields.includes(sortField)) {
+        const aVal = (a as any)[sortField] ?? 0;
+        const bVal = (b as any)[sortField] ?? 0;
+        return sortDir === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      const aVal = String((a as any)[sortField] || '');
+      const bVal = String((b as any)[sortField] || '');
+      const cmp = aVal.localeCompare(bVal);
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+  }, [opportunities, search, stageSelected, stageMode, industrySelected, industryMode, ownerSelected, ownerMode, sortField, sortDir, regionFilter]);
 
   const handleSort = (field: string) => {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
