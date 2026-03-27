@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Sparkles, X, Send, Loader2, MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { supabase } from '@/integrations/supabase/client';
 
 type Message = { role: 'user' | 'assistant'; content: string };
@@ -139,7 +140,11 @@ export default function FloatingAIChat() {
             }`}>
               {msg.role === 'assistant' ? (
                 <div className="prose prose-sm max-w-none prose-p:my-1 prose-p:text-[13px] prose-strong:text-foreground prose-ul:my-1 prose-li:my-0.5 prose-headings:text-sm prose-headings:font-semibold prose-headings:mt-2 prose-headings:mb-1 prose-table:text-[12px] prose-th:px-2 prose-th:py-1 prose-th:bg-muted/30 prose-td:px-2 prose-td:py-1 prose-code:text-[12px] prose-code:bg-muted/40 prose-code:px-1 prose-code:rounded">
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+                    table: (props) => <table className="w-full text-[12px] border-collapse border border-border/30 my-2" {...props} />,
+                    th: (props) => <th className="border border-border/30 px-2 py-1 bg-muted/30 text-left font-semibold" {...props} />,
+                    td: (props) => <td className="border border-border/30 px-2 py-1 align-top" {...props} />,
+                  }}>{msg.content}</ReactMarkdown>
                 </div>
               ) : msg.content}
             </div>

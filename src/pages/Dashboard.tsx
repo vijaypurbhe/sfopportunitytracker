@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { formatCurrency, formatPercent, getStageColor, getStageName, ALL_STAGES, isActiveStage } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +29,7 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef, regionFilter }: { ti
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
+  const [conversationHistory, setConversationHistory] = useState<Array<{role: 'user' | 'assistant'; content: string}>>([]);
   const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
 
   useEffect(() => {
@@ -38,21 +40,29 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef, regionFilter }: { ti
   }, [open, anchorRef]);
 
   const askAgent = async (q: string) => {
+    const userContent = q || `Give me a quick insight about the "${tileTitle}" metric.`;
+    const updatedHistory = [...conversationHistory, { role: 'user' as const, content: userContent }];
+    setConversationHistory(updatedHistory);
     setLoading(true);
     setResponse('');
+    setQuery('');
     try {
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
-          messages: [{ role: 'user', content: q || `Give me a quick insight about the "${tileTitle}" metric.` }],
+          messages: updatedHistory,
           context: `User is on the Dashboard, looking at the "${tileTitle}" tile.${regionFilter && regionFilter !== 'all' ? ` Filtered to ${regionFilter} region ONLY.` : ''}`,
           pipelineData: `Tile "${tileTitle}" shows: ${tileData}`,
           regionFilter: regionFilter || 'all',
         },
       });
       if (error) throw error;
-      setResponse(data?.response || 'No insights available.');
+      const assistantContent = data?.response || 'No insights available.';
+      setConversationHistory(prev => [...prev, { role: 'assistant', content: assistantContent }]);
+      setResponse(assistantContent);
     } catch {
-      setResponse('Unable to generate insight right now.');
+      const errMsg = 'Unable to generate insight right now.';
+      setConversationHistory(prev => [...prev, { role: 'assistant', content: errMsg }]);
+      setResponse(errMsg);
     } finally {
       setLoading(false);
     }
@@ -123,7 +133,11 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef, regionFilter }: { ti
               prose-table:text-[12px] prose-th:px-2 prose-th:py-1 prose-th:bg-muted/50 prose-th:font-semibold
               prose-td:px-2 prose-td:py-1 prose-td:border-t prose-td:border-border/30
               prose-code:text-[12px] prose-code:bg-muted/50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded">
-              <ReactMarkdown>{response}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+                table: (props) => <table className="w-full text-[12px] border-collapse border border-border/30 my-2" {...props} />,
+                th: (props) => <th className="border border-border/30 px-2 py-1 bg-muted/50 text-left font-semibold" {...props} />,
+                td: (props) => <td className="border border-border/30 px-2 py-1 align-top" {...props} />,
+              }}>{response}</ReactMarkdown>
             </div>
           )}
         </div>
