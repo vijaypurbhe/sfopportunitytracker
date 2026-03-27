@@ -112,17 +112,16 @@ export default function Dashboard() {
     );
   }
 
-  const activeOpps = opps.filter(o => o.stage !== 'P5' || o.sales_stage?.includes('Won'));
-  const totalTCV = opps.reduce((sum, o) => sum + (o.overall_tcv || 0), 0);
-  const avgWinProb = opps.length ? opps.reduce((sum, o) => sum + (o.win_probability || 0), 0) / opps.length : 0;
-  const wonDeals = opps.filter(o => o.sales_stage?.includes('Won'));
+  const activeOpps = opps.filter(o => isActiveStage(o.stage));
+  const totalTCV = activeOpps.reduce((sum, o) => sum + (Number(o.overall_tcv) || 0), 0);
+  const avgWinProb = activeOpps.length ? activeOpps.reduce((sum, o) => sum + (o.win_probability || 0), 0) / activeOpps.length : 0;
+  const wonDeals = opps.filter(o => o.stage === 'P5' || o.sales_stage?.includes('Won'));
   const winRate = opps.length ? (wonDeals.length / opps.length * 100) : 0;
 
-  const stages = ['P1', 'P2', 'P3', 'P4', 'P5'];
-  const stageData = stages.map(s => {
+  const stageData = ALL_STAGES.map(s => {
     const stageOpps = opps.filter(o => o.stage === s);
-    return { stage: s, name: getStageName(s), count: stageOpps.length, tcv: stageOpps.reduce((sum, o) => sum + (o.overall_tcv || 0), 0) };
-  });
+    return { stage: s, name: getStageName(s), count: stageOpps.length, tcv: stageOpps.reduce((sum, o) => sum + (Number(o.overall_tcv) || 0), 0) };
+  }).filter(d => d.count > 0);
 
   const industryMap = new Map<string, number>();
   opps.forEach(o => { const ind = o.primary_industry || 'Unknown'; industryMap.set(ind, (industryMap.get(ind) || 0) + 1); });
