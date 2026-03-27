@@ -382,7 +382,7 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-2">
               {closingSoon.map(opp => (
-                <div key={opp.id} className="flex items-center justify-between p-3 rounded-xl bg-white/40 backdrop-blur-sm border border-white/20">
+                <div key={opp.id} className="flex items-center justify-between p-3 rounded-xl bg-white/40 backdrop-blur-sm border border-white/20 cursor-pointer hover:bg-white/60 transition-colors" onClick={() => navigate(`/opportunities/${opp.id}`)}>
                   <div>
                     <p className="font-medium text-sm">{opp.opportunity_name}</p>
                     <p className="text-xs text-muted-foreground">{opp.account_name} • {opp.opportunity_owner}</p>
