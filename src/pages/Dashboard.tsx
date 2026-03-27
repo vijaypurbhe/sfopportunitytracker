@@ -1,4 +1,5 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { formatCurrency, formatPercent, getStageColor, getStageName, ALL_STAGES, isActiveStage } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
