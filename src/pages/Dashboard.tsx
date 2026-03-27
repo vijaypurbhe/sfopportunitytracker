@@ -55,7 +55,7 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef }: { tileTitle: strin
   }
 
   return (
-    <div className="absolute top-0 right-0 left-0 bottom-0 z-20 rounded-2xl bg-white/90 backdrop-blur-xl border border-[hsl(217,91%,60%,0.2)] p-4 flex flex-col">
+    <div className="absolute top-0 right-0 left-0 z-20 rounded-2xl bg-white/95 backdrop-blur-xl border border-[hsl(217,91%,60%,0.2)] p-4 flex flex-col shadow-xl" style={{ minHeight: '220px' }}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5">
           <Sparkles className="h-3.5 w-3.5 text-[hsl(217,91%,60%)]" />
