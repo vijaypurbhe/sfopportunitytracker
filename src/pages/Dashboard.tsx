@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { formatCurrency, formatPercent, getStageColor, getStageName, ALL_STAGES, isActiveStage } from '@/lib/format';
@@ -63,25 +64,28 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef }: { tileTitle: strin
     );
   }
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop overlay with blur */}
       <div
-        className="fixed inset-0 z-[100] bg-black/20 backdrop-blur-sm animate-in fade-in duration-200"
+        className="fixed inset-0 z-[100] bg-black/25 backdrop-blur-sm"
+        style={{ animation: 'fadeIn 200ms ease-out' }}
         onClick={() => setOpen(false)}
       />
       {/* Floating card anchored to tile position */}
       <div
-        className="fixed z-[101] flex flex-col rounded-2xl bg-white/95 backdrop-blur-2xl border border-[hsl(217,91%,60%,0.15)] shadow-2xl shadow-[hsl(217,91%,60%,0.12)] animate-in zoom-in-95 fade-in duration-200"
+        className="fixed z-[101] flex flex-col rounded-2xl bg-white border border-[hsl(217,91%,60%,0.15)] shadow-2xl shadow-[hsl(217,91%,60%,0.12)]"
         style={{
-          top: pos ? `${pos.top}px` : '20%',
+          top: pos ? `${Math.min(pos.top, window.innerHeight * 0.15)}px` : '10%',
           left: pos ? `${pos.left}px` : '25%',
-          width: pos ? `${pos.width}px` : '420px',
-          maxHeight: '70vh',
+          width: pos ? `${Math.max(pos.width + 80, 500)}px` : '500px',
+          maxWidth: 'min(700px, calc(100vw - 48px))',
+          maxHeight: '75vh',
+          animation: 'popIn 200ms ease-out',
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/30">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/30 shrink-0">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-[hsl(217,91%,60%,0.1)]">
               <Sparkles className="h-4 w-4 text-[hsl(217,91%,60%)]" />
@@ -97,9 +101,9 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef }: { tileTitle: strin
         </div>
 
         {/* Response body */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 min-h-[120px] max-h-[45vh]">
+        <div className="flex-1 overflow-y-auto px-5 py-4 min-h-[140px]">
           {loading ? (
-            <div className="flex items-center gap-2.5 text-muted-foreground py-6 justify-center">
+            <div className="flex items-center gap-2.5 text-muted-foreground py-8 justify-center">
               <Loader2 className="h-4 w-4 animate-spin text-[hsl(217,91%,60%)]" />
               <span className="text-sm">Analyzing {tileTitle.toLowerCase()}...</span>
             </div>
@@ -119,7 +123,7 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef }: { tileTitle: strin
         </div>
 
         {/* Input area */}
-        <div className="px-5 py-3.5 border-t border-border/30">
+        <div className="px-5 py-3.5 border-t border-border/30 shrink-0">
           <div className="flex gap-2">
             <input
               value={query}
@@ -138,7 +142,8 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef }: { tileTitle: strin
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 
