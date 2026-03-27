@@ -19,7 +19,6 @@ const statusConfig: Record<string, { icon: typeof Clock; color: string; label: s
 };
 
 export default function Gates() {
-  const { user } = useAuth();
 
   const { data: gates, isLoading } = useQuery({
     queryKey: ['gate-approvals'],
