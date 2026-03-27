@@ -4,6 +4,7 @@ import { Sparkles, X, Send, Loader2, MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { supabase } from '@/integrations/supabase/client';
+import { useRegionFilter } from '@/hooks/useRegionFilter';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 
@@ -25,18 +26,19 @@ function getPromptsForPath(pathname: string): string[] {
   return ['How can I help?', 'Pipeline overview', 'Quick insights'];
 }
 
-function getPageContext(pathname: string): string {
-  if (pathname === '/') return 'User is on the Dashboard viewing pipeline summary metrics.';
-  if (pathname === '/pipeline') return 'User is on the Pipeline Kanban board.';
-  if (pathname === '/opportunities') return 'User is on the Opportunities list page.';
-  if (pathname.startsWith('/opportunities/')) return 'User is viewing a specific opportunity detail page. Use the entity data provided to answer contextually.';
-  if (pathname === '/accounts') return 'User is on the Accounts page.';
-  if (pathname.startsWith('/accounts/')) return 'User is viewing a specific account detail page. Use the entity data provided to answer contextually.';
-  if (pathname === '/gates') return 'User is on the Approval Gates page.';
-  if (pathname === '/ai-insights') return 'User is on the AI Insights page.';
-  if (pathname === '/notifications') return 'User is on the Notifications page.';
-  if (pathname === '/settings') return 'User is on the Settings page.';
-  return 'User is browsing the CRM application.';
+function getPageContext(pathname: string, regionFilter: string): string {
+  const regionContext = regionFilter === 'all' ? 'All regions selected.' : `Region filter selected: ${regionFilter}.`;
+  if (pathname === '/') return `User is on the Dashboard viewing pipeline summary metrics. ${regionContext}`;
+  if (pathname === '/pipeline') return `User is on the Pipeline Kanban board. ${regionContext}`;
+  if (pathname === '/opportunities') return `User is on the Opportunities list page. ${regionContext}`;
+  if (pathname.startsWith('/opportunities/')) return `User is viewing a specific opportunity detail page. Use the entity data provided to answer contextually. ${regionContext}`;
+  if (pathname === '/accounts') return `User is on the Accounts page. ${regionContext}`;
+  if (pathname.startsWith('/accounts/')) return `User is viewing a specific account detail page. Use the entity data provided to answer contextually. ${regionContext}`;
+  if (pathname === '/gates') return `User is on the Approval Gates page. ${regionContext}`;
+  if (pathname === '/ai-insights') return `User is on the AI Insights page. ${regionContext}`;
+  if (pathname === '/notifications') return `User is on the Notifications page. ${regionContext}`;
+  if (pathname === '/settings') return `User is on the Settings page. ${regionContext}`;
+  return `User is browsing the CRM application. ${regionContext}`;
 }
 
 function extractEntityFromPath(pathname: string): { entityType: string; entityId: string } | null {
@@ -53,6 +55,7 @@ export default function FloatingAIChat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const location = useLocation();
+  const { regionFilter } = useRegionFilter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const prompts = getPromptsForPath(location.pathname);
 
@@ -73,7 +76,8 @@ export default function FloatingAIChat() {
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           messages: allMessages,
-          context: getPageContext(location.pathname),
+          context: getPageContext(location.pathname, regionFilter),
+          regionFilter,
           ...(entity ? { entityType: entity.entityType, entityId: entity.entityId } : {}),
         },
       });
@@ -133,18 +137,25 @@ export default function FloatingAIChat() {
 
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+            <div className={`max-w-[90%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
               msg.role === 'user'
                 ? 'bg-[hsl(217,91%,60%)] text-white rounded-br-md'
                 : 'bg-white/70 border border-white/30 text-foreground rounded-bl-md'
             }`}>
               {msg.role === 'assistant' ? (
-                <div className="prose prose-sm max-w-none prose-p:my-1 prose-p:text-[13px] prose-strong:text-foreground prose-ul:my-1 prose-li:my-0.5 prose-headings:text-sm prose-headings:font-semibold prose-headings:mt-2 prose-headings:mb-1 prose-table:text-[12px] prose-th:px-2 prose-th:py-1 prose-th:bg-muted/30 prose-td:px-2 prose-td:py-1 prose-code:text-[12px] prose-code:bg-muted/40 prose-code:px-1 prose-code:rounded">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
-                    table: (props) => <table className="w-full text-[12px] border-collapse border border-border/30 my-2" {...props} />,
-                    th: (props) => <th className="border border-border/30 px-2 py-1 bg-muted/30 text-left font-semibold" {...props} />,
-                    td: (props) => <td className="border border-border/30 px-2 py-1 align-top" {...props} />,
-                  }}>{msg.content}</ReactMarkdown>
+                <div className="prose prose-sm max-w-none prose-p:my-1 prose-p:text-[13px] prose-strong:text-foreground prose-ul:my-1 prose-li:my-0.5 prose-headings:text-sm prose-headings:font-semibold prose-headings:mt-2 prose-headings:mb-1 prose-code:text-[12px] prose-code:bg-muted/40 prose-code:px-1 prose-code:rounded">
+                  <div className="overflow-x-auto">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        table: (props) => <table className="w-full min-w-[360px] text-[12px] border-collapse border border-border/30 my-2" {...props} />,
+                        th: (props) => <th className="border border-border/30 px-2 py-1 bg-muted/30 text-left font-semibold" {...props} />,
+                        td: (props) => <td className="border border-border/30 px-2 py-1 align-top" {...props} />,
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               ) : msg.content}
             </div>
