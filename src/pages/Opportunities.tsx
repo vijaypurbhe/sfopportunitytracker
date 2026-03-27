@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+
 import { Link } from 'react-router-dom';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { formatCurrency, formatDate, getStageColor, formatPercent } from '@/lib/format';
