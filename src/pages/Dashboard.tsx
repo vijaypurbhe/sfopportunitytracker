@@ -14,6 +14,7 @@ const STAGE_COLORS = ['hsl(217, 91%, 60%)', 'hsl(38, 92%, 50%)', 'hsl(280, 65%, 
 export default function Dashboard() {
   const { data: opportunities, isLoading } = useOpportunities();
   const [regionFilter, setRegionFilter] = useState('all');
+  const opps = useMemo(() => filterByRegion(opportunities || [], regionFilter), [opportunities, regionFilter]);
 
   if (isLoading) {
     return (
@@ -29,7 +30,6 @@ export default function Dashboard() {
     );
   }
 
-  const opps = useMemo(() => filterByRegion(opportunities || [], regionFilter), [opportunities, regionFilter]);
   const activeOpps = opps.filter(o => o.stage !== 'P5' || o.sales_stage?.includes('Won'));
   const totalTCV = opps.reduce((sum, o) => sum + (o.overall_tcv || 0), 0);
   const avgWinProb = opps.length ? opps.reduce((sum, o) => sum + (o.win_probability || 0), 0) / opps.length : 0;

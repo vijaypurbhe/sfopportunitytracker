@@ -102,6 +102,7 @@ export default function Accounts() {
             <SelectItem value="opps_asc">Deals: Fewest</SelectItem>
           </SelectContent>
         </Select>
+        <RegionFilter value={regionFilter} onChange={setRegionFilter} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
