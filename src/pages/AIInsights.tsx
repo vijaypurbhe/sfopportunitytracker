@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useOpportunities } from '@/hooks/useOpportunities';
+import { useRegionFilter } from '@/hooks/useRegionFilter';
+import { filterByRegion } from '@/lib/regions';
+import { isActiveStage } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Sparkles, AlertTriangle, TrendingUp, Lightbulb, RefreshCw, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import RegionFilter from '@/components/RegionFilter';
 
 interface PipelineInsights {
   summary: string;
