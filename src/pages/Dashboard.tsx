@@ -237,7 +237,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">{opps.length} opportunities in your pipeline</p>
+          <p className="text-muted-foreground text-sm mt-0.5">{activeOpps.length} active opportunities in your pipeline</p>
         </div>
         <RegionFilter value={regionFilter} onChange={setRegionFilter} />
       </div>
@@ -246,12 +246,12 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div ref={tileRef1}>
           <GlassCard className="relative">
-            <TileAgentPopover tileTitle="Total Opportunities" tileData={`Count: ${opps.length}`} anchorRef={tileRef1} regionFilter={regionFilter} />
+            <TileAgentPopover tileTitle="Active Opportunities" tileData={`Count: ${activeOpps.length}`} anchorRef={tileRef1} regionFilter={regionFilter} />
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Opportunities</p>
-                  <p className="text-3xl font-bold text-foreground mt-1">{opps.length}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Active Opportunities</p>
+                  <p className="text-3xl font-bold text-foreground mt-1">{activeOpps.length}</p>
                 </div>
                 <div className="rounded-2xl p-3 bg-gradient-to-br from-[hsl(217,91%,60%,0.15)] to-[hsl(217,91%,60%,0.05)]">
                   <Target className="h-6 w-6 text-[hsl(217,91%,60%)]" />

@@ -67,10 +67,10 @@ export default function Auth() {
           <div className="relative">
             <div className="absolute inset-0 bg-[hsl(217,91%,60%,0.4)] rounded-2xl blur-xl" />
             <div className="relative flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[hsl(217,91%,60%)] to-[hsl(217,91%,50%)] shadow-lg shadow-[hsl(217,91%,60%,0.3)]">
-              <BarChart3 className="h-8 w-8 text-white" />
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Salesforce.com_logo.svg/1280px-Salesforce.com_logo.svg.png" alt="Salesforce" className="h-10 w-10 object-contain" />
             </div>
           </div>
-          <h1 className="mt-5 text-3xl font-bold tracking-tight text-white">Pipeline CRM</h1>
+          <h1 className="mt-5 text-3xl font-bold tracking-tight text-white">Salesforce Pipeline Tracker</h1>
           <p className="mt-2 text-sm text-[hsl(215,20%,60%)]">AI-powered sales pipeline management</p>
         </div>
 
