@@ -197,7 +197,10 @@ export default function Dashboard() {
   const totalTCV = activeOpps.reduce((sum, o) => sum + (Number(o.overall_tcv) || 0), 0);
   const avgWinProb = activeOpps.length ? activeOpps.reduce((sum, o) => sum + (o.win_probability || 0), 0) / activeOpps.length : 0;
   const wonDeals = opps.filter(o => o.stage === 'P5' || o.sales_stage?.includes('Won'));
-  const winRate = opps.length ? (wonDeals.length / opps.length * 100) : 0;
+  const lostDeals = opps.filter(o => o.sales_stage?.includes('Lost') || o.stage?.toLowerCase() === 'lost');
+  const closedDeals = wonDeals.length + lostDeals.length;
+  const winRate = closedDeals > 0 ? (wonDeals.length / closedDeals * 100) : 0;
+  const avgDealSize = activeOpps.length > 0 ? totalTCV / activeOpps.length : 0;
 
   const stageData = ALL_STAGES.map(s => {
     const stageOpps = opps.filter(o => o.stage === s);
@@ -280,7 +283,7 @@ export default function Dashboard() {
 
         <div ref={tileRef3}>
           <GlassCard className="relative">
-            <TileAgentPopover tileTitle="Win Rate" tileData={`Win Rate: ${formatPercent(Math.round(winRate))}, Won Deals: ${wonDeals.length}, Total: ${opps.length}`} anchorRef={tileRef3} regionFilter={regionFilter} />
+            <TileAgentPopover tileTitle="Win Rate" tileData={`Win Rate: ${formatPercent(Math.round(winRate))}, Won: ${wonDeals.length}, Lost: ${lostDeals.length}, Closed total: ${closedDeals}`} anchorRef={tileRef3} regionFilter={regionFilter} />
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -297,12 +300,12 @@ export default function Dashboard() {
 
         <div ref={tileRef4}>
           <GlassCard className="relative">
-            <TileAgentPopover tileTitle="Active Deals" tileData={`Active: ${activeOpps.length}, Avg Win Prob: ${Math.round(avgWinProb)}%`} anchorRef={tileRef4} regionFilter={regionFilter} />
+            <TileAgentPopover tileTitle="Avg Deal Size" tileData={`Average active deal size: ${formatCurrency(avgDealSize)}, based on ${activeOpps.length} active deals with total TCV ${formatCurrency(totalTCV)}`} anchorRef={tileRef4} regionFilter={regionFilter} />
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Active Deals</p>
-                  <p className="text-3xl font-bold text-foreground mt-1">{activeOpps.length}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Avg Deal Size</p>
+                  <p className="text-3xl font-bold text-foreground mt-1">{formatCurrency(avgDealSize)}</p>
                 </div>
                 <div className="rounded-2xl p-3 bg-gradient-to-br from-[hsl(280,65%,60%,0.15)] to-[hsl(280,65%,60%,0.05)]">
                   <Users className="h-6 w-6 text-[hsl(280,65%,60%)]" />
