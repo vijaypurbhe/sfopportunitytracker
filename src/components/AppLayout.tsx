@@ -66,7 +66,7 @@ export default function AppLayout() {
       )}>
         <div className="flex items-center gap-2 p-4 border-b border-sidebar-border">
           <BarChart3 className="h-7 w-7 text-sidebar-primary shrink-0" />
-          {!collapsed && <span className="text-lg font-bold text-sidebar-primary-foreground">Pipeline CRM</span>}
+          {!collapsed && <span className="text-lg font-bold text-sidebar-primary-foreground">SF Pipeline Tracker</span>}
         </div>
 
         <nav className="flex-1 space-y-1 p-2 overflow-y-auto">
