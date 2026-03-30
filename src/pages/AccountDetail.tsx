@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { isActiveStage } from '@/lib/format';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { formatCurrency, formatDate, getStageColor, formatPercent } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +17,7 @@ export default function AccountDetail() {
 
   const accountOpps = useMemo(() => {
     if (!opportunities) return [];
-    return opportunities.filter(o => o.account_name === decodedName);
+    return opportunities.filter(o => o.account_name === decodedName && isActiveStage(o.stage, o.sales_stage));
   }, [opportunities, decodedName]);
 
   const summary = useMemo(() => {
