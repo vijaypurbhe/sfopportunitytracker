@@ -22,13 +22,19 @@ interface PipelineInsights {
 
 export default function AIInsights() {
   const { data: opportunities, isLoading: oppsLoading } = useOpportunities();
+  const { regionFilter, setRegionFilter } = useRegionFilter();
   const [insights, setInsights] = useState<PipelineInsights | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const activeOpps = useMemo(() => {
+    if (!opportunities) return [];
+    return filterByRegion(opportunities, regionFilter).filter(o => isActiveStage(o.stage, o.sales_stage));
+  }, [opportunities, regionFilter]);
+
   const analyzeHandler = async () => {
-    if (!opportunities?.length) {
-      toast.error('No opportunities to analyze');
+    if (!activeOpps.length) {
+      toast.error('No active opportunities to analyze');
       return;
     }
     setLoading(true);
