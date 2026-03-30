@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useOpportunities } from '@/hooks/useOpportunities';
+import { useRegionFilter } from '@/hooks/useRegionFilter';
+import { filterByRegion } from '@/lib/regions';
+import { isActiveStage } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Sparkles, AlertTriangle, TrendingUp, Lightbulb, RefreshCw, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import RegionFilter from '@/components/RegionFilter';
 
 interface PipelineInsights {
   summary: string;
@@ -18,23 +22,30 @@ interface PipelineInsights {
 
 export default function AIInsights() {
   const { data: opportunities, isLoading: oppsLoading } = useOpportunities();
+  const { regionFilter, setRegionFilter } = useRegionFilter();
   const [insights, setInsights] = useState<PipelineInsights | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const activeOpps = useMemo(() => {
+    if (!opportunities) return [];
+    return filterByRegion(opportunities, regionFilter).filter(o => isActiveStage(o.stage, o.sales_stage));
+  }, [opportunities, regionFilter]);
+
   const analyzeHandler = async () => {
-    if (!opportunities?.length) {
-      toast.error('No opportunities to analyze');
+    if (!activeOpps.length) {
+      toast.error('No active opportunities to analyze');
       return;
     }
     setLoading(true);
     setError(null);
 
     try {
-      const trimmedOpps = opportunities.map(o => ({
+      const trimmedOpps = activeOpps.map(o => ({
         name: o.opportunity_name,
         account: o.account_name,
         stage: o.stage,
+        sales_stage: o.sales_stage,
         tcv: o.overall_tcv,
         win_prob: o.win_probability,
         ebitda: o.ebitda_percent,
@@ -86,15 +97,18 @@ export default function AIInsights() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">AI Insights</h1>
-          <p className="text-sm text-muted-foreground">AI-powered analysis of your pipeline ({opportunities?.length || 0} opportunities)</p>
+          <p className="text-sm text-muted-foreground">AI-powered analysis of your active pipeline ({activeOpps.length} opportunities{regionFilter !== 'all' ? ` in ${regionFilter}` : ''})</p>
         </div>
-        <Button onClick={analyzeHandler} disabled={loading || !opportunities?.length}>
-          {loading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-          {loading ? 'Analyzing...' : insights ? 'Refresh Analysis' : 'Analyze Pipeline'}
-        </Button>
+        <div className="flex items-center gap-3">
+          <RegionFilter value={regionFilter} onChange={setRegionFilter} />
+          <Button onClick={analyzeHandler} disabled={loading || !activeOpps.length}>
+            {loading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+            {loading ? 'Analyzing...' : insights ? 'Refresh Analysis' : 'Analyze Pipeline'}
+          </Button>
+        </div>
       </div>
 
       {!insights && !loading && !error && (
