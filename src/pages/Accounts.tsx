@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { useRegionFilter } from '@/hooks/useRegionFilter';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, isActiveStage } from '@/lib/format';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,8 +23,9 @@ export default function Accounts() {
   const accounts = useMemo(() => {
     if (!opportunities) return [];
     const regionFiltered = filterByRegion(opportunities, regionFilter);
+    const activeOnly = regionFiltered.filter(o => isActiveStage(o.stage, o.sales_stage));
     const map = new Map<string, { name: string; owner: string; industry: string; country: string; sbu: string; opps: number; tcv: number; category: string }>();
-    regionFiltered.forEach(o => {
+    activeOnly.forEach(o => {
       const name = o.account_name || 'Unknown';
       const existing = map.get(name);
       if (existing) {
