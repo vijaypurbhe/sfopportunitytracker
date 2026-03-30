@@ -41,10 +41,11 @@ export default function AIInsights() {
     setError(null);
 
     try {
-      const trimmedOpps = opportunities.map(o => ({
+      const trimmedOpps = activeOpps.map(o => ({
         name: o.opportunity_name,
         account: o.account_name,
         stage: o.stage,
+        sales_stage: o.sales_stage,
         tcv: o.overall_tcv,
         win_prob: o.win_probability,
         ebitda: o.ebitda_percent,
@@ -96,15 +97,18 @@ export default function AIInsights() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">AI Insights</h1>
-          <p className="text-sm text-muted-foreground">AI-powered analysis of your pipeline ({opportunities?.length || 0} opportunities)</p>
+          <p className="text-sm text-muted-foreground">AI-powered analysis of your active pipeline ({activeOpps.length} opportunities{regionFilter !== 'all' ? ` in ${regionFilter}` : ''})</p>
         </div>
-        <Button onClick={analyzeHandler} disabled={loading || !opportunities?.length}>
-          {loading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-          {loading ? 'Analyzing...' : insights ? 'Refresh Analysis' : 'Analyze Pipeline'}
-        </Button>
+        <div className="flex items-center gap-3">
+          <RegionFilter value={regionFilter} onChange={setRegionFilter} />
+          <Button onClick={analyzeHandler} disabled={loading || !activeOpps.length}>
+            {loading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+            {loading ? 'Analyzing...' : insights ? 'Refresh Analysis' : 'Analyze Pipeline'}
+          </Button>
+        </div>
       </div>
 
       {!insights && !loading && !error && (
