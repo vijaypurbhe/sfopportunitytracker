@@ -13,7 +13,7 @@ export type Opportunity = {
   expected_close_date: string | null;
   overall_tcv: number | null;
   overall_booking_value_tcv: number | null;
-  primary_industry: string | null;
+  assigned_presales_id: string | null;
   secondary_industry: string | null;
   country: string | null;
   city: string | null;
