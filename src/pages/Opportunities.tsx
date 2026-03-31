@@ -46,6 +46,9 @@ export default function Opportunities() {
   const filtered = useMemo(() => {
     if (!opportunities) return [];
     let result = filterByRegion(opportunities, regionFilter);
+    if (assignedToMe && user) {
+      result = result.filter(o => o.assigned_presales_id === user.id);
+    }
     result = applyMultiFilter(result, o => o.stage, stageSelected, stageMode);
     result = applyMultiFilter(result, o => o.primary_industry, industrySelected, industryMode);
     result = applyMultiFilter(result, o => o.opportunity_owner, ownerSelected, ownerMode);
