@@ -108,6 +108,7 @@ export default function Auth() {
 
             <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-5">
               {isSignUp && (
+                <>
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-xs font-medium text-[hsl(215,20%,55%)] uppercase tracking-wider">Full Name</Label>
                   <Input
@@ -134,6 +135,7 @@ export default function Auth() {
                     </SelectContent>
                   </Select>
                 </div>
+                </>
               )}
 
               <div className="space-y-2">
