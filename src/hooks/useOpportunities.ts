@@ -14,6 +14,7 @@ export type Opportunity = {
   overall_tcv: number | null;
   overall_booking_value_tcv: number | null;
   assigned_presales_id: string | null;
+  primary_industry: string | null;
   secondary_industry: string | null;
   country: string | null;
   city: string | null;
