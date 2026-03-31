@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useAuth } from '@/lib/auth';
 
 import { Link } from 'react-router-dom';
 import { useOpportunities } from '@/hooks/useOpportunities';
@@ -8,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, ArrowUpDown } from 'lucide-react';
+import { Search, ArrowUpDown, UserCheck } from 'lucide-react';
+import { Toggle } from '@/components/ui/toggle';
 import CreateOpportunityDialog from '@/components/CreateOpportunityDialog';
 import RegionFilter from '@/components/RegionFilter';
 import { filterByRegion } from '@/lib/regions';
@@ -17,7 +19,9 @@ import MultiSelectFilter, { applyMultiFilter, type FilterMode } from '@/componen
 const ALL_STAGES = ['P1', 'P2', 'P3', 'P4', 'P5'];
 
 export default function Opportunities() {
+  const { user } = useAuth();
   const { data: opportunities, isLoading } = useOpportunities();
+  const [assignedToMe, setAssignedToMe] = useState(false);
   const [search, setSearch] = useState('');
   const [stageSelected, setStageSelected] = useState<Set<string>>(new Set());
   const [stageMode, setStageMode] = useState<FilterMode>('include');
@@ -42,6 +46,9 @@ export default function Opportunities() {
   const filtered = useMemo(() => {
     if (!opportunities) return [];
     let result = filterByRegion(opportunities, regionFilter);
+    if (assignedToMe && user) {
+      result = result.filter(o => o.assigned_presales_id === user.id);
+    }
     result = applyMultiFilter(result, o => o.stage, stageSelected, stageMode);
     result = applyMultiFilter(result, o => o.primary_industry, industrySelected, industryMode);
     result = applyMultiFilter(result, o => o.opportunity_owner, ownerSelected, ownerMode);
@@ -66,7 +73,7 @@ export default function Opportunities() {
       const cmp = aVal.localeCompare(bVal);
       return sortDir === 'asc' ? cmp : -cmp;
     });
-  }, [opportunities, search, stageSelected, stageMode, industrySelected, industryMode, ownerSelected, ownerMode, sortField, sortDir, regionFilter]);
+  }, [opportunities, search, stageSelected, stageMode, industrySelected, industryMode, ownerSelected, ownerMode, sortField, sortDir, regionFilter, assignedToMe, user]);
 
   const handleSort = (field: string) => {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -123,6 +130,16 @@ export default function Opportunities() {
           onModeChange={setOwnerMode}
         />
         <RegionFilter value={regionFilter} onChange={setRegionFilter} />
+        <Toggle
+          pressed={assignedToMe}
+          onPressedChange={setAssignedToMe}
+          variant="outline"
+          size="sm"
+          className="gap-1.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+        >
+          <UserCheck className="h-4 w-4" />
+          Assigned to me
+        </Toggle>
       </div>
 
       {/* Table */}
