@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart3, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [department, setDepartment] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -35,7 +37,7 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     try {
-      await signUp(email, password, fullName);
+      await signUp(email, password, fullName, department);
       toast({ title: 'Account created', description: 'Check your email to verify your account.' });
     } catch (error: any) {
       toast({ title: 'Sign up failed', description: error.message, variant: 'destructive' });
@@ -106,6 +108,7 @@ export default function Auth() {
 
             <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-5">
               {isSignUp && (
+                <>
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-xs font-medium text-[hsl(215,20%,55%)] uppercase tracking-wider">Full Name</Label>
                   <Input
@@ -117,6 +120,22 @@ export default function Auth() {
                     className="h-12 rounded-xl border-white/[0.08] bg-white/[0.04] text-white placeholder:text-[hsl(215,20%,35%)] focus:border-[hsl(217,91%,60%,0.5)] focus:ring-1 focus:ring-[hsl(217,91%,60%,0.3)]"
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="department" className="text-xs font-medium text-[hsl(215,20%,55%)] uppercase tracking-wider">Role</Label>
+                  <Select value={department} onValueChange={setDepartment} required>
+                    <SelectTrigger className="h-12 rounded-xl border-white/[0.08] bg-white/[0.04] text-white focus:border-[hsl(217,91%,60%,0.5)] focus:ring-1 focus:ring-[hsl(217,91%,60%,0.3)]">
+                      <SelectValue placeholder="Select your role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pre-Sales">Pre-Sales</SelectItem>
+                      <SelectItem value="Sales">Sales</SelectItem>
+                      <SelectItem value="Delivery">Delivery</SelectItem>
+                      <SelectItem value="Practice Lead">Practice Lead</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                </>
               )}
 
               <div className="space-y-2">

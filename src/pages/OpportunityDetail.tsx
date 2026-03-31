@@ -7,7 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Building2, DollarSign, Globe, Calendar, FileText, ShieldCheck } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, Building2, DollarSign, Globe, Calendar, FileText, ShieldCheck, UserCheck } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import RequestGateDialog from '@/components/RequestGateDialog';
 import GateApprovalCard from '@/components/GateApprovalCard';
 
@@ -15,7 +19,27 @@ export default function OpportunityDetail() {
   const { id } = useParams<{ id: string }>();
   const { data: opp, isLoading } = useOpportunity(id!);
   const { data: gates } = useGateApprovals(id);
-  const _updateOpp = useUpdateOpportunity();
+  const updateOpp = useUpdateOpportunity();
+  const { toast } = useToast();
+
+  // Fetch Pre-Sales users for assignment dropdown
+  const { data: presalesUsers } = useQuery({
+    queryKey: ['presales-users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, email, department')
+        .eq('department', 'Pre-Sales');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const handlePresalesAssign = async (userId: string) => {
+    const val = userId === '__unassign__' ? null : userId;
+    await updateOpp.mutateAsync({ id: opp!.id, updates: { assigned_presales_id: val } as any });
+    toast({ title: 'Pre-Sales assigned', description: val ? `Assigned to ${presalesUsers?.find(u => u.user_id === val)?.full_name || 'user'}` : 'Unassigned' });
+  };
 
   if (isLoading || !opp) {
     return (
@@ -84,6 +108,37 @@ export default function OpportunityDetail() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 mt-4">
+          {/* Pre-Sales Assignment */}
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><UserCheck className="h-4 w-4" /> Pre-Sales Assignment</CardTitle></CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground mb-1.5">Assigned Pre-Sales Resource</p>
+                  <Select
+                    value={(opp as any).assigned_presales_id || '__unassign__'}
+                    onValueChange={handlePresalesAssign}
+                  >
+                    <SelectTrigger className="w-full max-w-xs">
+                      <SelectValue placeholder="Select Pre-Sales person" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__unassign__">Unassigned</SelectItem>
+                      {presalesUsers?.map(u => (
+                        <SelectItem key={u.user_id} value={u.user_id}>
+                          {u.full_name || u.email || 'Unknown'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {!presalesUsers?.length && (
+                  <p className="text-xs text-muted-foreground">No Pre-Sales users registered yet</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4" /> Deal Details</CardTitle></CardHeader>
