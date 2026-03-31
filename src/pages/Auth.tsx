@@ -119,6 +119,21 @@ export default function Auth() {
                     className="h-12 rounded-xl border-white/[0.08] bg-white/[0.04] text-white placeholder:text-[hsl(215,20%,35%)] focus:border-[hsl(217,91%,60%,0.5)] focus:ring-1 focus:ring-[hsl(217,91%,60%,0.3)]"
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="department" className="text-xs font-medium text-[hsl(215,20%,55%)] uppercase tracking-wider">Role</Label>
+                  <Select value={department} onValueChange={setDepartment} required>
+                    <SelectTrigger className="h-12 rounded-xl border-white/[0.08] bg-white/[0.04] text-white focus:border-[hsl(217,91%,60%,0.5)] focus:ring-1 focus:ring-[hsl(217,91%,60%,0.3)]">
+                      <SelectValue placeholder="Select your role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pre-Sales">Pre-Sales</SelectItem>
+                      <SelectItem value="Sales">Sales</SelectItem>
+                      <SelectItem value="Delivery">Delivery</SelectItem>
+                      <SelectItem value="Practice Lead">Practice Lead</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
 
               <div className="space-y-2">
