@@ -37,7 +37,7 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     try {
-      await signUp(email, password, fullName);
+      await signUp(email, password, fullName, department);
       toast({ title: 'Account created', description: 'Check your email to verify your account.' });
     } catch (error: any) {
       toast({ title: 'Sign up failed', description: error.message, variant: 'destructive' });
