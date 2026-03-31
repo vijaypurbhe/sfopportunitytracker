@@ -73,7 +73,7 @@ export default function Opportunities() {
       const cmp = aVal.localeCompare(bVal);
       return sortDir === 'asc' ? cmp : -cmp;
     });
-  }, [opportunities, search, stageSelected, stageMode, industrySelected, industryMode, ownerSelected, ownerMode, sortField, sortDir, regionFilter]);
+  }, [opportunities, search, stageSelected, stageMode, industrySelected, industryMode, ownerSelected, ownerMode, sortField, sortDir, regionFilter, assignedToMe, user]);
 
   const handleSort = (field: string) => {
     if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
