@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useAuth } from '@/lib/auth';
 
 import { Link } from 'react-router-dom';
 import { useOpportunities } from '@/hooks/useOpportunities';
