@@ -19,7 +19,9 @@ import MultiSelectFilter, { applyMultiFilter, type FilterMode } from '@/componen
 const ALL_STAGES = ['P1', 'P2', 'P3', 'P4', 'P5'];
 
 export default function Opportunities() {
+  const { user } = useAuth();
   const { data: opportunities, isLoading } = useOpportunities();
+  const [assignedToMe, setAssignedToMe] = useState(false);
   const [search, setSearch] = useState('');
   const [stageSelected, setStageSelected] = useState<Set<string>>(new Set());
   const [stageMode, setStageMode] = useState<FilterMode>('include');
