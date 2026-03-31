@@ -130,6 +130,16 @@ export default function Opportunities() {
           onModeChange={setOwnerMode}
         />
         <RegionFilter value={regionFilter} onChange={setRegionFilter} />
+        <Toggle
+          pressed={assignedToMe}
+          onPressedChange={setAssignedToMe}
+          variant="outline"
+          size="sm"
+          className="gap-1.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+        >
+          <UserCheck className="h-4 w-4" />
+          Assigned to me
+        </Toggle>
       </div>
 
       {/* Table */}
