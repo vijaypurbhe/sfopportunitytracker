@@ -167,6 +167,7 @@ export type Database = {
           acv_fy_26_27: number | null
           acv_fy_27_28: number | null
           alliance_details: Json | null
+          assigned_presales_id: string | null
           bid_manager: string | null
           bid_submission_date: string | null
           billing_end_date: string | null
@@ -235,6 +236,7 @@ export type Database = {
           acv_fy_26_27?: number | null
           acv_fy_27_28?: number | null
           alliance_details?: Json | null
+          assigned_presales_id?: string | null
           bid_manager?: string | null
           bid_submission_date?: string | null
           billing_end_date?: string | null
@@ -303,6 +305,7 @@ export type Database = {
           acv_fy_26_27?: number | null
           acv_fy_27_28?: number | null
           alliance_details?: Json | null
+          assigned_presales_id?: string | null
           bid_manager?: string | null
           bid_submission_date?: string | null
           billing_end_date?: string | null
@@ -361,6 +364,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          department: string | null
           email: string | null
           full_name: string | null
           id: string
@@ -370,6 +374,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          department?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
@@ -379,6 +384,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          department?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
