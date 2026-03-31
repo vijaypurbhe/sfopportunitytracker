@@ -19,7 +19,27 @@ export default function OpportunityDetail() {
   const { id } = useParams<{ id: string }>();
   const { data: opp, isLoading } = useOpportunity(id!);
   const { data: gates } = useGateApprovals(id);
-  const _updateOpp = useUpdateOpportunity();
+  const updateOpp = useUpdateOpportunity();
+  const { toast } = useToast();
+
+  // Fetch Pre-Sales users for assignment dropdown
+  const { data: presalesUsers } = useQuery({
+    queryKey: ['presales-users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, email, department')
+        .eq('department', 'Pre-Sales');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const handlePresalesAssign = async (userId: string) => {
+    const val = userId === '__unassign__' ? null : userId;
+    await updateOpp.mutateAsync({ id: opp!.id, updates: { assigned_presales_id: val } as any });
+    toast({ title: 'Pre-Sales assigned', description: val ? `Assigned to ${presalesUsers?.find(u => u.user_id === val)?.full_name || 'user'}` : 'Unassigned' });
+  };
 
   if (isLoading || !opp) {
     return (
