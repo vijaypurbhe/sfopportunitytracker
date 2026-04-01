@@ -94,6 +94,8 @@ export function useUpdateOpportunity() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-notifications'] });
     },
   });
 }
