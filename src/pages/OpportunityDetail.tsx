@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Building2, DollarSign, Globe, Calendar, FileText, ShieldCheck, UserCheck } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -136,6 +137,23 @@ export default function OpportunityDetail() {
                   <p className="text-xs text-muted-foreground">No Pre-Sales users registered yet</p>
                 )}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Partner Portal Logged */}
+          <Card>
+            <CardContent className="p-4 flex items-center gap-3">
+              <Checkbox
+                id="partner-portal"
+                checked={(opp as any).partner_portal_logged ?? false}
+                onCheckedChange={async (checked) => {
+                  await updateOpp.mutateAsync({ id: opp.id, updates: { partner_portal_logged: !!checked } as any });
+                  toast({ title: checked ? 'Marked as logged in partner portal' : 'Unmarked from partner portal' });
+                }}
+              />
+              <label htmlFor="partner-portal" className="text-sm font-medium cursor-pointer select-none">
+                Lead logged in partner portal?
+              </label>
             </CardContent>
           </Card>
 

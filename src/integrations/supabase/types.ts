@@ -200,6 +200,7 @@ export type Database = {
           overall_booking_value_tcv: number | null
           overall_tcv: number | null
           parent_opportunity_id: string | null
+          partner_portal_logged: boolean
           pricing_model: string | null
           primary_industry: string | null
           prime_status: string | null
@@ -269,6 +270,7 @@ export type Database = {
           overall_booking_value_tcv?: number | null
           overall_tcv?: number | null
           parent_opportunity_id?: string | null
+          partner_portal_logged?: boolean
           pricing_model?: string | null
           primary_industry?: string | null
           prime_status?: string | null
@@ -338,6 +340,7 @@ export type Database = {
           overall_booking_value_tcv?: number | null
           overall_tcv?: number | null
           parent_opportunity_id?: string | null
+          partner_portal_logged?: boolean
           pricing_model?: string | null
           primary_industry?: string | null
           prime_status?: string | null

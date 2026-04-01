@@ -1,0 +1,1 @@
+ALTER TABLE public.opportunities ADD COLUMN partner_portal_logged boolean NOT NULL DEFAULT false;
