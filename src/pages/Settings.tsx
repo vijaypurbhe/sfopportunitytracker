@@ -2,7 +2,8 @@ import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Settings as SettingsIcon, Upload, FileSpreadsheet, CheckCircle2, AlertTriangle, Loader2, X } from 'lucide-react';
+import { Upload, FileSpreadsheet, CheckCircle2, AlertTriangle, Loader2, X } from 'lucide-react';
+import UserManagement from '@/components/UserManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -363,14 +364,8 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Placeholder for other settings */}
-      <Card>
-        <CardContent className="py-12 text-center text-muted-foreground">
-          <SettingsIcon className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p className="font-medium">More Settings</p>
-          <p className="text-sm mt-1">User management, role assignments, and notification preferences coming soon.</p>
-        </CardContent>
-      </Card>
+      {/* User Management */}
+      <UserManagement />
     </div>
   );
 }

@@ -430,6 +430,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_all_users_admin: {
+        Args: never
+        Returns: {
+          created_at: string
+          department: string
+          email: string
+          full_name: string
+          user_id: string
+        }[]
+      }
       get_presales_users: {
         Args: never
         Returns: {
