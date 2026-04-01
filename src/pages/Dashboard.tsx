@@ -9,7 +9,7 @@ import { formatCurrency, formatPercent, getStageColor, getStageName, ALL_STAGES,
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { TrendingUp, DollarSign, Target, Users, AlertTriangle, Sparkles, X, Send, Loader2 } from 'lucide-react';
+import { TrendingUp, DollarSign, Target, Users, AlertTriangle, Sparkles, X, Send, Loader2, Clock } from 'lucide-react';
 import RegionFilter from '@/components/RegionFilter';
 import { filterByRegion } from '@/lib/regions';
 import { supabase } from '@/integrations/supabase/client';
