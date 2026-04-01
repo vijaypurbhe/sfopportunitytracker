@@ -71,7 +71,8 @@ serve(async (req) => {
     const totalTCV = activeOpps.reduce((s, o) => s + (Number(o.overall_tcv) || 0), 0);
     const wonDeals = allOpps.filter(o => o.stage === 'P5' || (o.sales_stage && o.sales_stage.includes('Won')));
     const lostDeals = allOpps.filter(o => o.sales_stage?.includes('Lost') || o.stage === 'Lost');
-    const winRate = allOpps.length > 0 ? (wonDeals.length / allOpps.length * 100).toFixed(1) : '0';
+    const closedDeals = wonDeals.length + lostDeals.length;
+    const winRate = closedDeals > 0 ? (wonDeals.length / closedDeals * 100).toFixed(1) : '0';
     const avgWinProb = activeOpps.length
       ? (activeOpps.reduce((s, o) => s + (o.win_probability || 0), 0) / activeOpps.length).toFixed(1)
       : '0';
