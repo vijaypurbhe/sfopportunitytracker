@@ -364,14 +364,8 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Placeholder for other settings */}
-      <Card>
-        <CardContent className="py-12 text-center text-muted-foreground">
-          <SettingsIcon className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p className="font-medium">More Settings</p>
-          <p className="text-sm mt-1">User management, role assignments, and notification preferences coming soon.</p>
-        </CardContent>
-      </Card>
+      {/* User Management */}
+      <UserManagement />
     </div>
   );
 }
