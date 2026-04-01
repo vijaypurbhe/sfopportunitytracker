@@ -395,7 +395,7 @@ export default function Dashboard() {
       {(() => {
         const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         const recentOpps = opps
-          .filter(o => o.created_at && new Date(o.created_at) >= sevenDaysAgo)
+          .filter(o => o.created_at && new Date(o.created_at) >= sevenDaysAgo && o.stage !== 'P5')
           .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
           .slice(0, 10);
         return (
