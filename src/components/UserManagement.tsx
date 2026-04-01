@@ -15,7 +15,7 @@ interface UserRecord {
   created_at: string;
 }
 
-const ADMIN_EMAIL = 'vijaypralhad.purbhe@techmahindra.com';
+// Admin check now uses department === 'Administrator' from profile
 
 const deptColors: Record<string, string> = {
   'Pre-Sales': 'bg-blue-100 text-blue-800',
