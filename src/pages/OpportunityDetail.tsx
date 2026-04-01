@@ -140,6 +140,23 @@ export default function OpportunityDetail() {
             </CardContent>
           </Card>
 
+          {/* Partner Portal Logged */}
+          <Card>
+            <CardContent className="p-4 flex items-center gap-3">
+              <Checkbox
+                id="partner-portal"
+                checked={(opp as any).partner_portal_logged ?? false}
+                onCheckedChange={async (checked) => {
+                  await updateOpp.mutateAsync({ id: opp.id, updates: { partner_portal_logged: !!checked } as any });
+                  toast({ title: checked ? 'Marked as logged in partner portal' : 'Unmarked from partner portal' });
+                }}
+              />
+              <label htmlFor="partner-portal" className="text-sm font-medium cursor-pointer select-none">
+                Lead logged in partner portal?
+              </label>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4" /> Deal Details</CardTitle></CardHeader>
