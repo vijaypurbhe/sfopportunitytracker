@@ -30,6 +30,27 @@ export default function AppLayout() {
 
   const queryClient = useQueryClient();
 
+  const { data: userProfile } = useQuery({
+    queryKey: ['my-profile', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('department')
+        .eq('user_id', user.id)
+        .single();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const isAdmin = userProfile?.department === 'Administrator';
+
+  const navItems = useMemo(() =>
+    allNavItems.filter(item => !item.adminOnly || isAdmin),
+    [isAdmin]
+  );
+
   const { data: unreadCount } = useQuery({
     queryKey: ['unread-notifications', user?.id],
     queryFn: async () => {
