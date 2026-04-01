@@ -419,6 +419,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_presales_users: {
+        Args: never
+        Returns: {
+          department: string
+          email: string
+          full_name: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
