@@ -27,12 +27,9 @@ export default function OpportunityDetail() {
   const { data: presalesUsers } = useQuery({
     queryKey: ['presales-users'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, email, department')
-        .eq('department', 'Pre-Sales');
+      const { data, error } = await supabase.rpc('get_presales_users');
       if (error) throw error;
-      return data;
+      return data as { user_id: string; full_name: string; email: string; department: string }[];
     },
   });
 
