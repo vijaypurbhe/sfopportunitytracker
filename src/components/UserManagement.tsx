@@ -32,7 +32,7 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const isAdmin = user?.email === 'vijaypralhad.purbhe@techmahindra.com';
 
   useEffect(() => {
     if (!isAdmin) { setLoading(false); return; }
