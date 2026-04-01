@@ -132,6 +132,7 @@ export default function Auth() {
                       <SelectItem value="Sales">Sales</SelectItem>
                       <SelectItem value="Delivery">Delivery</SelectItem>
                       <SelectItem value="Practice Lead">Practice Lead</SelectItem>
+                      <SelectItem value="Alliances">Alliances</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

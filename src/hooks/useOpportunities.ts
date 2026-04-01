@@ -46,6 +46,7 @@ export type Opportunity = {
   account_details: any;
   duns_details: any;
   metadata: any;
+  partner_portal_logged: boolean;
 };
 
 export function useOpportunities() {
