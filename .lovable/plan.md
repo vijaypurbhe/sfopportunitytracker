@@ -1,97 +1,107 @@
 
 
-# Pipeline CRM — Comprehensive Opportunity Management Platform
+# Plan: Generate Salesforce Pipeline Tracker User Guide (DOCX)
 
-## Overview
-A full-featured CRM built from your pipeline data with team authentication, AI-powered insights, approval gates, and email notifications. All 170+ columns from your Excel data will be stored in Supabase and accessible throughout the app.
+## What We Are Building
+A professionally formatted Word document (.docx) that serves as a comprehensive user guide for the Salesforce Pipeline Tracker application, covering all features and role-specific workflows.
 
----
+## Document Structure
 
-## 1. Authentication & User Management
-- Email/password login via Lovable Cloud (Supabase Auth)
-- User roles: **Admin**, **Sales Owner**, **Presales**, **Bid Manager**, **Reviewer**
-- Role-based access control — users see only relevant opportunities based on their role
+### 1. Cover Page
+- Title: "Salesforce Pipeline Tracker — User Guide"
+- Subtitle: "AI-Powered Sales Pipeline Management"
+- Version, date, confidentiality notice
 
-## 2. Data Import & Database
-- Import all columns from the Excel file into a Supabase `opportunities` table
-- Supporting tables: `accounts`, `users/profiles`, `notifications`, `gate_approvals`, `comments`
-- Full CRUD — create, edit, update, and delete opportunities directly in the app
+### 2. Table of Contents
 
-## 3. Dashboard & Views
+### 3. Introduction & Overview
+- Purpose of the application
+- Key capabilities summary
+- Supported user roles: Pre-Sales, Sales, Delivery, Practice Lead, Alliances
 
-### Main Dashboard
-- **Pipeline summary cards**: Total opportunities, total TCV, win rate, average deal size
-- **Pipeline by stage**: Visual funnel showing P1 through P5 stages with counts and values
-- **Revenue heatmap**: Quarterly/monthly ACV breakdown (FY 24-25, 25-26, 26-27)
-- **Win probability distribution** chart
-- **Deals closing this quarter** with expected close dates
+### 4. Getting Started
+- **Account Registration**: Sign up with email, password, full name, and role selection
+- **Email Verification**: Confirm email before first login
+- **Signing In**: Login flow, password visibility toggle
+- **Navigation**: Sidebar menu items, collapsible sidebar, sign out
 
-### Pipeline Board (Kanban)
-- Drag-and-drop board organized by Sales Stage (P1–P5)
-- Cards show Account Name, Opportunity Name, TCV, Win Probability, Owner
-- Color-coded by deal size or urgency
+### 5. Dashboard
+- Pipeline summary cards (Total Opportunities, Total TCV, Win Rate, Weighted Pipeline)
+- Pipeline by Stage chart (P1–P5)
+- Win Probability Distribution (pie chart)
+- Monthly Revenue Trend (area chart)
+- AI Sparkle agents on each tile for contextual insights
+- Region filter (global, persisted across pages)
 
-### Opportunity List View
-- Searchable, filterable, sortable data table with all key columns
-- Filters: Stage, Industry, Country, SBU, IBG, Owner, Date range, TCV range
-- Bulk actions for stage updates
+### 6. Pipeline Board (Kanban)
+- Visual board organized by stage (P1–P5)
+- Cards showing account, opportunity name, TCV, win probability, owner
+- Sorting options (TCV, win probability, name, close date)
+- Stage visibility toggles
 
-### Opportunity Detail Page
-- All opportunity fields organized in tabs: **Overview**, **Financials**, **Account Info**, **Timeline**, **Activity**
-- Financials tab: Monthly/quarterly ACV breakdown with charts, EBITDA%, TCV, booking values
-- Account tab: DUNS data, company details, industry, competitors, global ultimate info
-- Editable fields with inline editing
+### 7. Opportunities List
+- Searchable, sortable data table
+- Multi-select filters: Stage, Industry, Owner (include/exclude modes)
+- "Assigned to Me" toggle for personal pipeline view
+- Create new opportunity dialog
+- Click-through to opportunity detail
 
-## 4. Approval Gates (Workflow)
+### 8. Opportunity Detail
+- **Overview tab**: Key metrics (TCV, Win Probability, EBITDA%, Resources), deal info, dates
+- **Financials tab**: ACV breakdown, booking values
+- **Account Info tab**: DUNS data, company details, industry, competitors
+- **Gates tab**: Approval gate status, request new gates
+- **Pre-Sales Assignment**: Dropdown to assign pre-sales resources
+- **Partner Portal checkbox**: "Lead logged in partner portal?"
 
-### Gate 1: Deal Qualification Gate
-- Triggered when moving opportunity from P1 → P2
-- Checklist: Account validated, industry confirmed, budget range identified, decision-maker identified
-- Requires approval from **Sales Manager** before proceeding
-- Shows qualification score based on completeness
+### 9. Accounts
+- Account list with search
+- Account detail page showing active opportunities only
+- Summary metrics per account (active deals, total TCV)
 
-### Gate 2: Presales Assignment Gate
-- Triggered at P2 → P3 transition
-- Assign Presales resources, Bid Manager, Pricing SPOC, Pricing Lead
-- Requires confirmation of resource availability
-- Approval from **Presales Lead**
+### 10. Approval Gates
+- Three gate types: Deal Qualification, Presales Assignment, Proposal Review
+- Requesting a gate approval from opportunity detail
+- Reviewing and approving/rejecting gates
+- Status filters (Pending, Approved, Rejected) and type filters
 
-### Gate 3: Proposal Review Gate
-- Triggered before P3 → P4 (before submitting proposal)
-- Review checklist: Pricing approved, EBITDA% validated, solution reviewed, competitive analysis done
-- Requires sign-off from **Bid Manager** and **Reviewer**
-- Blocks progression until all reviewers approve
+### 11. AI Insights
+- AI-powered pipeline analysis filtered by region
+- Win probability predictions, risk alerts, next best actions
+- Region-aware analysis
 
-Each gate shows: status (pending/approved/rejected), approver, timestamp, comments
+### 12. Notifications
+- Real-time in-app notifications with bell icon and unread count
+- Notification types: gate approvals, stage changes, AI alerts
+- Mark as read functionality
 
-## 5. AI Insights (Lovable AI)
-- **Win probability prediction**: AI analyzes deal attributes and suggests likely outcome
-- **Deal risk alerts**: Flag opportunities at risk based on stale dates, low win probability, missing fields
-- **Next best action**: AI recommends actions for each opportunity (follow up, escalate, update pricing)
-- **Pipeline health summary**: Weekly AI-generated summary of pipeline trends
-- Accessible via an "AI Insights" panel on the dashboard and each opportunity detail page
+### 13. Settings — Data Sync
+- Excel file upload for weekly data sync
+- Column auto-mapping from Excel headers to database fields
+- Match by CRM ID — updates existing, creates new, preserves unmatched
+- Sync preview and results summary
 
-## 6. Notifications System
+### 14. Floating AI Chat
+- Persistent AI assistant accessible from any page
+- Context-aware responses based on current page and region filter
+- Markdown and table rendering in responses
 
-### In-App Notifications
-- Bell icon with unread count in the header
-- Notification types: gate approval requests, stage changes, approaching close dates, AI alerts, comments/mentions
-- Notification center with mark-as-read and filtering
+### 15. Role-Based Workflows
+- **Sales**: Create opportunities, manage pipeline, track win rates, request gate approvals
+- **Pre-Sales**: View assigned opportunities via "Assigned to Me", support deal qualification
+- **Delivery**: Monitor active deals, track resource allocation
+- **Practice Lead**: Review pipeline health, approve gates, oversee team deals
+- **Alliances**: Track partner portal logging, manage alliance relationships
 
-### Email Notifications
-- Email alerts sent to Opportunity Owners, Bid Managers, and gate approvers
-- Triggers: new gate approval needed, gate approved/rejected, deal stage change, deal approaching close date
-- Branded email templates via Lovable's built-in email system
+### 16. Appendix
+- Pipeline stage definitions (P0–P5, Won, Lost, Aborted, Hibernate)
+- Region filter options
+- Keyboard shortcuts and tips
 
-## 7. Account & Relationship Management
-- Account list with grouping by SBU, IBG, Industry
-- Account detail page showing all related opportunities
-- Account health indicators based on active deals and revenue
-- Competitor tracking per opportunity
-
-## 8. Design & UX
-- Clean, professional enterprise UI with sidebar navigation
-- Light theme with blue primary accent (corporate feel)
-- Responsive layout optimized for desktop (primary) with tablet support
-- Key sections: Dashboard, Pipeline, Opportunities, Accounts, Notifications, Settings
+## Technical Approach
+- Use the `docx` npm library (pptxgenjs-style) to generate a professional .docx
+- Apply consistent styling: Arial font, blue accent color (#3B82F6) matching the app theme
+- Include a formatted table of contents, numbered headings, bullet lists, and tables
+- Output to `/mnt/documents/Salesforce_Pipeline_Tracker_User_Guide.docx`
+- QA by converting to PDF/images and inspecting
 
