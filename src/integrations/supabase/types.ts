@@ -419,6 +419,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_notification: {
+        Args: {
+          _message: string
+          _related_gate_id?: string
+          _related_opportunity_id?: string
+          _title: string
+          _type?: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       get_presales_users: {
         Args: never
         Returns: {
