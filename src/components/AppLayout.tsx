@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
@@ -12,7 +12,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import FloatingAIChat from '@/components/FloatingAIChat';
 
-const navItems = [
+const allNavItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/pipeline', icon: Kanban, label: 'Pipeline' },
   { to: '/opportunities', icon: List, label: 'Opportunities' },
@@ -20,7 +20,7 @@ const navItems = [
   { to: '/gates', icon: ShieldCheck, label: 'Approval Gates' },
   { to: '/ai-insights', icon: Sparkles, label: 'AI Insights' },
   { to: '/notifications', icon: Bell, label: 'Notifications' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
+  { to: '/settings', icon: Settings, label: 'Settings', adminOnly: true },
 ];
 
 export default function AppLayout() {
@@ -29,6 +29,27 @@ export default function AppLayout() {
   const location = useLocation();
 
   const queryClient = useQueryClient();
+
+  const { data: userProfile } = useQuery({
+    queryKey: ['my-profile', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('department')
+        .eq('user_id', user.id)
+        .single();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const isAdmin = userProfile?.department === 'Administrator';
+
+  const navItems = useMemo(() =>
+    allNavItems.filter(item => !item.adminOnly || isAdmin),
+    [isAdmin]
+  );
 
   const { data: unreadCount } = useQuery({
     queryKey: ['unread-notifications', user?.id],

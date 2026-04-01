@@ -9,7 +9,7 @@ import { formatCurrency, formatPercent, getStageColor, getStageName, ALL_STAGES,
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { TrendingUp, DollarSign, Target, Users, AlertTriangle, Sparkles, X, Send, Loader2 } from 'lucide-react';
+import { TrendingUp, DollarSign, Target, Users, AlertTriangle, Sparkles, X, Send, Loader2, Clock } from 'lucide-react';
 import RegionFilter from '@/components/RegionFilter';
 import { filterByRegion } from '@/lib/regions';
 import { supabase } from '@/integrations/supabase/client';
@@ -390,6 +390,44 @@ export default function Dashboard() {
           </div>
         </GlassCard>
       </div>
+
+      {/* Recent Opportunities (last 7 days) */}
+      {(() => {
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const recentOpps = opps
+          .filter(o => o.created_at && new Date(o.created_at) >= sevenDaysAgo)
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, 10);
+        return (
+          <GlassCard>
+            <div className="p-5">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+                <Clock className="h-4 w-4 text-[hsl(217,91%,60%)]" />
+                Opportunities Created in Last 7 Days
+                <Badge variant="secondary" className="ml-auto">{recentOpps.length}</Badge>
+              </h3>
+              {recentOpps.length === 0 ? (
+                <p className="text-muted-foreground text-sm py-4 text-center">No opportunities created in the last 7 days</p>
+              ) : (
+                <div className="space-y-2">
+                  {recentOpps.map(opp => (
+                    <div key={opp.id} className="flex items-center justify-between p-3 rounded-xl bg-white/40 backdrop-blur-sm border border-white/20 cursor-pointer hover:bg-white/60 transition-colors" onClick={() => navigate(`/opportunities/${opp.id}`)}>
+                      <div>
+                        <p className="font-medium text-sm">{opp.opportunity_name}</p>
+                        <p className="text-xs text-muted-foreground">{opp.account_name} • Created {new Date(opp.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge className={getStageColor(opp.stage)}>{opp.stage || 'N/A'}</Badge>
+                        <span className="text-sm font-semibold">{formatCurrency(opp.overall_tcv)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </GlassCard>
+        );
+      })()}
 
       {/* Deals Closing Soon */}
       <GlassCard>

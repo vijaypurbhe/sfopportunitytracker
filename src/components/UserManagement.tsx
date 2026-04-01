@@ -15,7 +15,7 @@ interface UserRecord {
   created_at: string;
 }
 
-const ADMIN_EMAIL = 'vijaypralhad.purbhe@techmahindra.com';
+// Admin check now uses department === 'Administrator' from profile
 
 const deptColors: Record<string, string> = {
   'Pre-Sales': 'bg-blue-100 text-blue-800',
@@ -23,6 +23,7 @@ const deptColors: Record<string, string> = {
   'Delivery': 'bg-purple-100 text-purple-800',
   'Practice Lead': 'bg-orange-100 text-orange-800',
   'Alliances': 'bg-pink-100 text-pink-800',
+  'Administrator': 'bg-red-100 text-red-800',
 };
 
 export default function UserManagement() {
@@ -31,7 +32,7 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const isAdmin = user?.email === 'vijaypralhad.purbhe@techmahindra.com';
 
   useEffect(() => {
     if (!isAdmin) { setLoading(false); return; }
