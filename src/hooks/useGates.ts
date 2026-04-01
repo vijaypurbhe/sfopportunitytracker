@@ -77,17 +77,6 @@ export function useCreateGateRequest() {
         .select()
         .single();
       if (error) throw error;
-
-      // Create notification for the requestor
-      await supabase.from('notifications').insert({
-        user_id: user.id,
-        title: `Gate Request Submitted`,
-        message: `Your ${gate_type.replace(/_/g, ' ')} gate request has been submitted and is pending approval.`,
-        type: 'gate',
-        related_opportunity_id: opportunity_id,
-        related_gate_id: data.id,
-      });
-
       return data;
     },
     onSuccess: () => {
@@ -125,16 +114,6 @@ export function useUpdateGateStatus() {
       if (comments) updates.comments = comments;
       const { error } = await supabase.from('gate_approvals').update(updates).eq('id', id);
       if (error) throw error;
-
-      // Notify the requestor
-      await supabase.from('notifications').insert({
-        user_id: requested_by,
-        title: `Gate ${status === 'approved' ? 'Approved' : 'Rejected'}`,
-        message: `Your ${gate_type.replace(/_/g, ' ')} gate has been ${status}.${comments ? ` Comment: ${comments}` : ''}`,
-        type: status === 'approved' ? 'success' : 'warning',
-        related_opportunity_id: opportunity_id,
-        related_gate_id: id,
-      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gate-approvals'] });
