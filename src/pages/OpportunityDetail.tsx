@@ -103,6 +103,7 @@ export default function OpportunityDetail() {
               </Badge>
             ) : null}
           </TabsTrigger>
+          <TabsTrigger value="activity">Activity Log</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
         </TabsList>
 
