@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import RequestGateDialog from '@/components/RequestGateDialog';
 import GateApprovalCard from '@/components/GateApprovalCard';
+import ActivityLogTab from '@/components/ActivityLogTab';
 
 export default function OpportunityDetail() {
   const { id } = useParams<{ id: string }>();
@@ -102,6 +103,7 @@ export default function OpportunityDetail() {
               </Badge>
             ) : null}
           </TabsTrigger>
+          <TabsTrigger value="activity">Activity Log</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
         </TabsList>
 
@@ -295,6 +297,10 @@ export default function OpportunityDetail() {
               {gates.map(gate => <GateApprovalCard key={gate.id} gate={gate} />)}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="activity" className="space-y-4 mt-4">
+          <ActivityLogTab opportunityId={opp.id} />
         </TabsContent>
 
         <TabsContent value="timeline" className="mt-4">

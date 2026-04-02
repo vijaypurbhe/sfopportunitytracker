@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          activity_date: string
+          activity_type: string
+          content: string
+          created_at: string
+          id: string
+          opportunity_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_date?: string
+          activity_type?: string
+          content: string
+          created_at?: string
+          id?: string
+          opportunity_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_date?: string
+          activity_type?: string
+          content?: string
+          created_at?: string
+          id?: string
+          opportunity_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           content: string

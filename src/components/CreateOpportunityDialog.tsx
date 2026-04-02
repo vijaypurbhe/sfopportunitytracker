@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAllDistinctValues } from '@/hooks/useDistinctValues';
+import ComboboxField from '@/components/ComboboxField';
 
 const schema = z.object({
   opportunity_name: z.string().trim().min(1, 'Required').max(300),
@@ -48,6 +49,9 @@ type FormValues = z.infer<typeof schema>;
 export default function CreateOpportunityDialog() {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { data: distinctValues } = useAllDistinctValues();
+
+  const dv = (field: string) => distinctValues?.[field] || [];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -110,6 +114,23 @@ export default function CreateOpportunityDialog() {
     },
   });
 
+  const ComboField = ({ name, label, fieldKey }: { name: keyof FormValues; label: string; fieldKey: string }) => (
+    <FormField control={form.control} name={name} render={({ field }) => (
+      <FormItem>
+        <FormLabel>{label}</FormLabel>
+        <FormControl>
+          <ComboboxField
+            value={field.value as string || ''}
+            onChange={field.onChange}
+            options={dv(fieldKey)}
+            placeholder={`Select ${label.toLowerCase()}`}
+          />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    )} />
+  );
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -134,20 +155,8 @@ export default function CreateOpportunityDialog() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="account_name" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Account Name *</FormLabel>
-                    <FormControl><Input {...field} placeholder="e.g. Acme Corp" /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="opportunity_owner" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Opportunity Owner *</FormLabel>
-                    <FormControl><Input {...field} placeholder="e.g. John Smith" /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                <ComboField name="account_name" label="Account Name *" fieldKey="account_name" />
+                <ComboField name="opportunity_owner" label="Opportunity Owner *" fieldKey="opportunity_owner" />
                 <FormField control={form.control} name="stage" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Stage *</FormLabel>
@@ -199,20 +208,8 @@ export default function CreateOpportunityDialog() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="currency" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Currency</FormLabel>
-                    <FormControl><Input {...field} placeholder="USD" /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="pricing_model" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Pricing Model</FormLabel>
-                    <FormControl><Input {...field} placeholder="e.g. T&M, Fixed Price" /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                <ComboField name="currency" label="Currency" fieldKey="currency" />
+                <ComboField name="pricing_model" label="Pricing Model" fieldKey="pricing_model" />
                 <FormField control={form.control} name="contract_tenure_months" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Contract Tenure (months)</FormLabel>
@@ -227,62 +224,14 @@ export default function CreateOpportunityDialog() {
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Account & Industry</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <FormField control={form.control} name="primary_industry" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Primary Industry</FormLabel>
-                    <FormControl><Input {...field} placeholder="e.g. Banking" /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="secondary_industry" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Secondary Industry</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="country" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Country</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="city" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>City</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="account_sbu" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Account SBU</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="account_ibg" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Account IBG</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="account_owner" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Account Owner</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="account_category" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Account Category</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                <ComboField name="primary_industry" label="Primary Industry" fieldKey="primary_industry" />
+                <ComboField name="secondary_industry" label="Secondary Industry" fieldKey="secondary_industry" />
+                <ComboField name="country" label="Country" fieldKey="country" />
+                <ComboField name="city" label="City" fieldKey="city" />
+                <ComboField name="account_sbu" label="Account SBU" fieldKey="account_sbu" />
+                <ComboField name="account_ibg" label="Account IBG" fieldKey="account_ibg" />
+                <ComboField name="account_owner" label="Account Owner" fieldKey="account_owner" />
+                <ComboField name="account_category" label="Account Category" fieldKey="account_category" />
               </div>
 
               {/* Deal Details */}
@@ -297,34 +246,10 @@ export default function CreateOpportunityDialog() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="opportunity_category" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Opportunity Category</FormLabel>
-                    <FormControl><Input {...field} placeholder="e.g. New, Renewal" /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="bid_manager" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Bid Manager</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="sales_specialist_name" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Sales Specialist</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="competitor_name" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Competitor</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                <ComboField name="opportunity_category" label="Opportunity Category" fieldKey="opportunity_category" />
+                <ComboField name="bid_manager" label="Bid Manager" fieldKey="bid_manager" />
+                <ComboField name="sales_specialist_name" label="Sales Specialist" fieldKey="sales_specialist_name" />
+                <ComboField name="competitor_name" label="Competitor" fieldKey="competitor_name" />
                 <FormField control={form.control} name="total_resources" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Total Resources</FormLabel>
@@ -332,13 +257,7 @@ export default function CreateOpportunityDialog() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="sales_stage" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Sales Stage</FormLabel>
-                    <FormControl><Input {...field} placeholder="e.g. Qualified" /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                <ComboField name="sales_stage" label="Sales Stage" fieldKey="sales_stage" />
               </div>
 
               <div className="flex justify-end gap-2 pt-4 pb-2">
