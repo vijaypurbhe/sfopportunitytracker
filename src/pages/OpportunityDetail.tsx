@@ -299,6 +299,10 @@ export default function OpportunityDetail() {
           )}
         </TabsContent>
 
+        <TabsContent value="activity" className="space-y-4 mt-4">
+          <ActivityLogTab opportunityId={opp.id} />
+        </TabsContent>
+
         <TabsContent value="timeline" className="mt-4">
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
