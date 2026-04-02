@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import RequestGateDialog from '@/components/RequestGateDialog';
 import GateApprovalCard from '@/components/GateApprovalCard';
+import ActivityLogTab from '@/components/ActivityLogTab';
 
 export default function OpportunityDetail() {
   const { id } = useParams<{ id: string }>();
