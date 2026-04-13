@@ -49,6 +49,20 @@ export default function Auth() {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    try {
+      await resetPassword(forgotEmail);
+      toast({ title: 'Reset email sent', description: 'Check your email for a password reset link.' });
+      setShowForgot(false);
+    } catch (error: any) {
+      toast({ title: 'Reset failed', description: error.message, variant: 'destructive' });
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden">
       {/* Animated gradient background */}
