@@ -50,6 +50,7 @@ type FormValues = z.infer<typeof schema>;
 export default function CreateOpportunityDialog() {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const { data: distinctValues } = useAllDistinctValues();
 
   const dv = (field: string) => distinctValues?.[field] || [];
@@ -72,6 +73,7 @@ export default function CreateOpportunityDialog() {
       const { data, error } = await supabase
         .from('opportunities')
         .insert({
+          created_by: user?.id,
           opportunity_name: values.opportunity_name,
           account_name: values.account_name,
           opportunity_owner: values.opportunity_owner,
