@@ -45,7 +45,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName, department }, emailRedirectTo: window.location.origin },
+      options: { data: { full_name: fullName, department }, emailRedirectTo: 'https://sfopportunitytracker.web.app/' },
+    });
+    if (error) throw error;
+  };
+
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://sfopportunitytracker.web.app/reset-password',
     });
     if (error) throw error;
   };
