@@ -16,7 +16,10 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const { signIn, signUp, resetPassword } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -43,6 +46,20 @@ export default function Auth() {
       toast({ title: 'Sign up failed', description: error.message, variant: 'destructive' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    try {
+      await resetPassword(forgotEmail);
+      toast({ title: 'Reset email sent', description: 'Check your email for a password reset link.' });
+      setShowForgot(false);
+    } catch (error: any) {
+      toast({ title: 'Reset failed', description: error.message, variant: 'destructive' });
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -193,9 +210,49 @@ export default function Auth() {
                   </div>
                 )}
               </Button>
+
+              {!isSignUp && (
+                <button
+                  type="button"
+                  onClick={() => { setShowForgot(true); setForgotEmail(email); }}
+                  className="w-full text-center text-sm text-[hsl(217,91%,60%)] hover:text-[hsl(217,91%,70%)] transition-colors mt-1"
+                >
+                  Forgot password?
+                </button>
+              )}
             </form>
           </div>
         </div>
+
+        {/* Forgot password modal */}
+        {showForgot && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="relative w-full max-w-sm mx-4 rounded-2xl border border-white/[0.08] bg-[hsl(220,25%,12%)] p-6 shadow-2xl">
+              <h2 className="text-xl font-bold text-white mb-1">Reset Password</h2>
+              <p className="text-sm text-[hsl(215,20%,55%)] mb-5">We'll send a reset link to your email.</p>
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-email" className="text-xs font-medium text-[hsl(215,20%,55%)] uppercase tracking-wider">Email</Label>
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    placeholder="you@company.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                    className="h-12 rounded-xl border-white/[0.08] bg-white/[0.04] text-white placeholder:text-[hsl(215,20%,35%)] focus:border-[hsl(217,91%,60%,0.5)] focus:ring-1 focus:ring-[hsl(217,91%,60%,0.3)]"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <Button type="button" variant="outline" onClick={() => setShowForgot(false)} className="flex-1 h-11 rounded-xl border-white/[0.1] text-white hover:bg-white/[0.06]">Cancel</Button>
+                  <Button type="submit" disabled={forgotLoading} className="flex-1 h-11 rounded-xl bg-[hsl(217,91%,60%)] hover:bg-[hsl(217,91%,55%)] text-white font-semibold">
+                    {forgotLoading ? 'Sending...' : 'Send Reset Link'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Bottom text */}
         <p className="mt-6 text-center text-xs text-[hsl(215,20%,40%)]">
