@@ -23,14 +23,6 @@ interface UserRecord {
   created_at: string;
 }
 
-const deptColors: Record<string, string> = {
-  'Pre-Sales': 'bg-blue-100 text-blue-800',
-  'Sales': 'bg-green-100 text-green-800',
-  'Delivery': 'bg-purple-100 text-purple-800',
-  'Practice Lead': 'bg-orange-100 text-orange-800',
-  'Alliances': 'bg-pink-100 text-pink-800',
-  'Administrator': 'bg-red-100 text-red-800',
-};
 
 const departments = ['Pre-Sales', 'Sales', 'Delivery', 'Practice Lead', 'Alliances', 'Administrator'];
 
