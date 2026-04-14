@@ -17,6 +17,7 @@ import Gates from "@/pages/Gates";
 import AIInsights from "@/pages/AIInsights";
 import Notifications from "@/pages/Notifications";
 import SettingsPage from "@/pages/Settings";
+import FalloutReport from "@/pages/FalloutReport";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ const App = () => (
               <Route path="ai-insights" element={<AIInsights />} />
               <Route path="notifications" element={<Notifications />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="fallout-report" element={<FalloutReport />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
