@@ -60,7 +60,9 @@ export default function OpportunityDetail() {
           <h1 className="text-2xl font-bold text-foreground">{opp.opportunity_name}</h1>
           <div className="flex items-center gap-3 mt-2">
             <Badge className={getStageColor(opp.stage)}>{opp.stage} - {getStageName(opp.stage)}</Badge>
-            <span className="text-sm text-muted-foreground">ID: {opp.opportunity_id}</span>
+            <Badge variant="outline" className="text-sm font-semibold px-3 py-1 border-primary/40 text-primary">
+              CRM ID: {opp.opportunity_id || '-'}
+            </Badge>
           </div>
         </div>
         <div className="flex gap-2">
