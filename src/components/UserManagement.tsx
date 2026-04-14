@@ -59,6 +59,19 @@ export default function UserManagement() {
     setShowPassword(false);
   };
 
+  const handleRoleChange = async (u: UserRecord, newDept: string) => {
+    const { error: updErr } = await supabase
+      .from('profiles')
+      .update({ department: newDept })
+      .eq('user_id', u.user_id);
+    if (updErr) {
+      toast({ title: 'Update failed', description: updErr.message, variant: 'destructive' });
+    } else {
+      setUsers((prev) => prev.map((p) => p.user_id === u.user_id ? { ...p, department: newDept } : p));
+      toast({ title: 'Role updated', description: `${u.full_name || u.email} is now ${newDept}.` });
+    }
+  };
+
   const handleResetPassword = async () => {
     if (!resetTarget) return;
     if (newPassword.length < 6) {
