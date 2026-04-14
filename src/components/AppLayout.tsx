@@ -20,7 +20,7 @@ const allNavItems = [
   { to: '/gates', icon: ShieldCheck, label: 'Approval Gates' },
   { to: '/ai-insights', icon: Sparkles, label: 'AI Insights' },
   { to: '/notifications', icon: Bell, label: 'Notifications' },
-  { to: '/fallout-report', icon: FileWarning, label: 'Fallout Report' },
+  
   { to: '/settings', icon: Settings, label: 'Settings', adminOnly: true },
 ];
 
