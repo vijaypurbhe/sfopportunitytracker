@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Users, Loader2, ShieldAlert } from 'lucide-react';
+import { Users, Loader2, ShieldAlert, KeyRound } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
+import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 interface UserRecord {
@@ -14,8 +16,6 @@ interface UserRecord {
   department: string | null;
   created_at: string;
 }
-
-// Admin check now uses department === 'Administrator' from profile
 
 const deptColors: Record<string, string> = {
   'Pre-Sales': 'bg-blue-100 text-blue-800',
@@ -28,9 +28,11 @@ const deptColors: Record<string, string> = {
 
 export default function UserManagement() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [resettingId, setResettingId] = useState<string | null>(null);
 
   const isAdmin = user?.email === 'vijaypralhad.purbhe@techmahindra.com';
 
@@ -47,6 +49,31 @@ export default function UserManagement() {
       setLoading(false);
     })();
   }, [isAdmin]);
+
+  const handleResetPassword = async (targetUserId: string, email: string) => {
+    setResettingId(targetUserId);
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('admin-reset-password', {
+        body: { target_user_id: targetUserId },
+      });
+
+      if (fnErr) throw fnErr;
+      if (data?.error) throw new Error(data.error);
+
+      toast({
+        title: 'Password reset sent',
+        description: `A reset link has been sent to ${email}.`,
+      });
+    } catch (err: any) {
+      toast({
+        title: 'Reset failed',
+        description: err.message || 'Failed to send password reset.',
+        variant: 'destructive',
+      });
+    } finally {
+      setResettingId(null);
+    }
+  };
 
   if (!isAdmin) {
     return (
@@ -100,6 +127,7 @@ export default function UserManagement() {
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Registered</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -119,11 +147,26 @@ export default function UserManagement() {
                   <TableCell className="text-muted-foreground text-sm">
                     {format(new Date(u.created_at), 'MMM d, yyyy')}
                   </TableCell>
+                  <TableCell className="text-center">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={resettingId === u.user_id}
+                      onClick={() => handleResetPassword(u.user_id, u.email || '')}
+                      className="h-7 text-xs"
+                    >
+                      {resettingId === u.user_id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <><KeyRound className="h-3 w-3 mr-1" />Reset Password</>
+                      )}
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
               {users.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     No users registered yet.
                   </TableCell>
                 </TableRow>
