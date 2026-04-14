@@ -32,6 +32,8 @@ const deptColors: Record<string, string> = {
   'Administrator': 'bg-red-100 text-red-800',
 };
 
+const departments = ['Pre-Sales', 'Sales', 'Delivery', 'Practice Lead', 'Alliances', 'Administrator'];
+
 export default function UserManagement() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -155,13 +157,21 @@ export default function UserManagement() {
                     <TableCell className="font-medium">{u.full_name || '—'}</TableCell>
                     <TableCell className="text-muted-foreground">{u.email || '—'}</TableCell>
                     <TableCell>
-                      {u.department ? (
-                        <Badge className={deptColors[u.department] || 'bg-muted text-muted-foreground'} variant="secondary">
-                          {u.department}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground/50 text-xs italic">Not set</span>
-                      )}
+                      <Select
+                        value={u.department || ''}
+                        onValueChange={(val) => handleRoleChange(u, val)}
+                      >
+                        <SelectTrigger className="h-7 w-[140px] text-xs">
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {departments.map((dept) => (
+                            <SelectItem key={dept} value={dept} className="text-xs">
+                              {dept}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {format(new Date(u.created_at), 'MMM d, yyyy')}
