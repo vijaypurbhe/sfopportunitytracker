@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   BarChart3, LayoutDashboard, Kanban, List, Building2,
-  Bell, Settings, LogOut, ChevronLeft, ChevronRight, Sparkles, ShieldCheck, FileWarning
+  Bell, Settings, LogOut, ChevronLeft, ChevronRight, Sparkles, ShieldCheck
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
