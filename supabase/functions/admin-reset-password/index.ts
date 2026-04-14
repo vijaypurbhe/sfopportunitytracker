@@ -13,28 +13,30 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Verify the caller is authenticated and is admin
     const authHeader = req.headers.get("authorization") ?? "";
-    const callerClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { authorization: authHeader } },
-    });
-    const { data: { user: caller }, error: authErr } = await callerClient.auth.getUser();
-    if (authErr || !caller) {
+    if (!authHeader.startsWith("Bearer ")) {
+      console.log("No Bearer token found");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Check admin
-    const { data: profile } = await callerClient
-      .from("profiles")
-      .select("email")
-      .eq("user_id", caller.id)
-      .maybeSingle();
+    // Use service role client to verify the caller's token
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user: caller }, error: authErr } = await adminClient.auth.getUser(token);
 
-    if (profile?.email !== "vijaypralhad.purbhe@techmahindra.com") {
+    if (authErr || !caller) {
+      console.log("getUser failed:", authErr?.message);
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    console.log("Caller:", caller.email);
+
+    if (caller.email !== "vijaypralhad.purbhe@techmahindra.com") {
       return new Response(JSON.stringify({ error: "Access denied" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -47,17 +49,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get target user email
-    const adminClient = createClient(supabaseUrl, serviceRoleKey);
     const { data: targetUser, error: getUserErr } = await adminClient.auth.admin.getUserById(target_user_id);
     if (getUserErr || !targetUser?.user?.email) {
+      console.log("getUserById failed:", getUserErr?.message);
       return new Response(JSON.stringify({ error: "User not found" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Generate password reset link
-    const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
+    const { error: linkErr } = await adminClient.auth.admin.generateLink({
       type: "recovery",
       email: targetUser.user.email,
       options: {
@@ -66,11 +66,13 @@ Deno.serve(async (req) => {
     });
 
     if (linkErr) {
+      console.log("generateLink failed:", linkErr.message);
       return new Response(JSON.stringify({ error: linkErr.message }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    console.log("Reset link generated for:", targetUser.user.email);
     return new Response(JSON.stringify({
       success: true,
       message: `Password reset link sent to ${targetUser.user.email}`,
@@ -78,6 +80,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    console.error("Unhandled error:", err.message);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
