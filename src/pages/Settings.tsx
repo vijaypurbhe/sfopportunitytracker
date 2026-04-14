@@ -282,15 +282,25 @@ export default function SettingsPage() {
 
     const reader = new FileReader();
     reader.onload = (evt) => {
-      const data = new Uint8Array(evt.target?.result as ArrayBuffer);
-      const wb = XLSX.read(data, { type: 'array', cellDates: false });
-      setWorkbook(wb);
-      setSheetNames(wb.SheetNames);
+      try {
+        const data = new Uint8Array(evt.target?.result as ArrayBuffer);
+        const wb = XLSX.read(data, { type: 'array', cellDates: false });
+        setWorkbook(wb);
+        setSheetNames(wb.SheetNames);
 
-      // Auto-select first sheet (or only sheet)
-      const firstSheet = wb.SheetNames[0];
-      setSelectedSheet(firstSheet);
-      processSheet(wb, firstSheet);
+        // Auto-select first sheet (or only sheet)
+        const firstSheet = wb.SheetNames[0];
+        setSelectedSheet(firstSheet);
+        processSheet(wb, firstSheet);
+      } catch (err: any) {
+        console.error('File parse error:', err);
+        toast({ title: 'File error', description: err.message || 'Could not parse the spreadsheet file.', variant: 'destructive' });
+        resetUpload();
+      }
+    };
+    reader.onerror = () => {
+      toast({ title: 'File error', description: 'Failed to read the file.', variant: 'destructive' });
+      resetUpload();
     };
     reader.readAsArrayBuffer(file);
   }, [toast, processSheet]);
