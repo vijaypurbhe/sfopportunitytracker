@@ -13,7 +13,6 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
     const authHeader = req.headers.get("authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) {
@@ -23,24 +22,21 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Use service role client to verify the caller's token
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
     const token = authHeader.replace("Bearer ", "");
-    const callerClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { authorization: authHeader } },
-    });
+    const { data: { user: caller }, error: authErr } = await adminClient.auth.getUser(token);
 
-    // Use getClaims for JWT validation
-    const { data: claimsData, error: claimsErr } = await callerClient.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims) {
-      console.log("getClaims failed:", claimsErr?.message);
+    if (authErr || !caller) {
+      console.log("getUser failed:", authErr?.message);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const callerEmail = claimsData.claims.email;
-    console.log("Caller email:", callerEmail);
+    console.log("Caller:", caller.email);
 
-    if (callerEmail !== "vijaypralhad.purbhe@techmahindra.com") {
+    if (caller.email !== "vijaypralhad.purbhe@techmahindra.com") {
       return new Response(JSON.stringify({ error: "Access denied" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -53,7 +49,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    const adminClient = createClient(supabaseUrl, serviceRoleKey);
     const { data: targetUser, error: getUserErr } = await adminClient.auth.admin.getUserById(target_user_id);
     if (getUserErr || !targetUser?.user?.email) {
       console.log("getUserById failed:", getUserErr?.message);
@@ -77,6 +72,7 @@ Deno.serve(async (req) => {
       });
     }
 
+    console.log("Reset link generated for:", targetUser.user.email);
     return new Response(JSON.stringify({
       success: true,
       message: `Password reset link sent to ${targetUser.user.email}`,
