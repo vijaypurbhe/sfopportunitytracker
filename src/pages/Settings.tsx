@@ -484,7 +484,25 @@ export default function SettingsPage() {
                 <Button variant="ghost" size="icon" onClick={resetUpload}><X className="h-4 w-4" /></Button>
               </div>
 
+              {/* Sheet selector */}
+              {sheetNames.length > 1 && (
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">Select Sheet</label>
+                  <Select value={selectedSheet} onValueChange={handleSheetChange}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Choose a sheet" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sheetNames.map(name => (
+                        <SelectItem key={name} value={name}>{name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               {/* Tabs: Sync + Fallout */}
+              {preview && (
               <Tabs defaultValue="sync" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="sync">Data Sync</TabsTrigger>
