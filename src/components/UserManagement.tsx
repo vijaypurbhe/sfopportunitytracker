@@ -2,8 +2,13 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Users, Loader2, ShieldAlert, KeyRound } from 'lucide-react';
+import { Users, Loader2, ShieldAlert, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -32,46 +37,58 @@ export default function UserManagement() {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [resettingId, setResettingId] = useState<string | null>(null);
+
+  // Reset password dialog state
+  const [resetTarget, setResetTarget] = useState<UserRecord | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const isAdmin = user?.email === 'vijaypralhad.purbhe@techmahindra.com';
 
   useEffect(() => {
     if (!isAdmin) { setLoading(false); return; }
-
     (async () => {
       const { data, error: err } = await supabase.rpc('get_all_users_admin');
-      if (err) {
-        setError(err.message);
-      } else {
-        setUsers((data as UserRecord[]) || []);
-      }
+      if (err) { setError(err.message); }
+      else { setUsers((data as UserRecord[]) || []); }
       setLoading(false);
     })();
   }, [isAdmin]);
 
-  const handleResetPassword = async (targetUserId: string, email: string) => {
-    setResettingId(targetUserId);
+  const openResetDialog = (u: UserRecord) => {
+    setResetTarget(u);
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowPassword(false);
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetTarget) return;
+    if (newPassword.length < 6) {
+      toast({ title: 'Too short', description: 'Password must be at least 6 characters.', variant: 'destructive' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: 'Mismatch', description: 'Passwords do not match.', variant: 'destructive' });
+      return;
+    }
+
+    setResetting(true);
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('admin-reset-password', {
-        body: { target_user_id: targetUserId },
+        body: { target_user_id: resetTarget.user_id, new_password: newPassword },
       });
-
       if (fnErr) throw fnErr;
       if (data?.error) throw new Error(data.error);
 
-      toast({
-        title: 'Password reset sent',
-        description: `A reset link has been sent to ${email}.`,
-      });
+      toast({ title: 'Password updated', description: `Password for ${resetTarget.email} has been changed.` });
+      setResetTarget(null);
     } catch (err: any) {
-      toast({
-        title: 'Reset failed',
-        description: err.message || 'Failed to send password reset.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Reset failed', description: err.message || 'Failed to reset password.', variant: 'destructive' });
     } finally {
-      setResettingId(null);
+      setResetting(false);
     }
   };
 
@@ -110,71 +127,127 @@ export default function UserManagement() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Users className="h-5 w-5 text-primary" />
-          User Management
-          <Badge variant="secondary" className="ml-auto">{users.length} users</Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-lg border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Registered</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((u) => (
-                <TableRow key={u.user_id}>
-                  <TableCell className="font-medium">{u.full_name || '—'}</TableCell>
-                  <TableCell className="text-muted-foreground">{u.email || '—'}</TableCell>
-                  <TableCell>
-                    {u.department ? (
-                      <Badge className={deptColors[u.department] || 'bg-muted text-muted-foreground'} variant="secondary">
-                        {u.department}
-                      </Badge>
-                    ) : (
-                      <span className="text-muted-foreground/50 text-xs italic">Not set</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {format(new Date(u.created_at), 'MMM d, yyyy')}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={resettingId === u.user_id}
-                      onClick={() => handleResetPassword(u.user_id, u.email || '')}
-                      className="h-7 text-xs"
-                    >
-                      {resettingId === u.user_id ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <><KeyRound className="h-3 w-3 mr-1" />Reset Password</>
-                      )}
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {users.length === 0 && (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Users className="h-5 w-5 text-primary" />
+            User Management
+            <Badge variant="secondary" className="ml-auto">{users.length} users</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-lg border overflow-hidden">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                    No users registered yet.
-                  </TableCell>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Registered</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+              </TableHeader>
+              <TableBody>
+                {users.map((u) => (
+                  <TableRow key={u.user_id}>
+                    <TableCell className="font-medium">{u.full_name || '—'}</TableCell>
+                    <TableCell className="text-muted-foreground">{u.email || '—'}</TableCell>
+                    <TableCell>
+                      {u.department ? (
+                        <Badge className={deptColors[u.department] || 'bg-muted text-muted-foreground'} variant="secondary">
+                          {u.department}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground/50 text-xs italic">Not set</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {format(new Date(u.created_at), 'MMM d, yyyy')}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openResetDialog(u)}
+                        className="h-7 text-xs"
+                      >
+                        <KeyRound className="h-3 w-3 mr-1" />Reset Password
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {users.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      No users registered yet.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={!!resetTarget} onOpenChange={(open) => { if (!open) setResetTarget(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reset Password</DialogTitle>
+            <DialogDescription>
+              Set a new password for <strong>{resetTarget?.full_name || resetTarget?.email}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <div className="relative">
+                <Input
+                  id="new-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Min 6 characters"
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm Password</Label>
+              <Input
+                id="confirm-password"
+                type={showPassword ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter password"
+              />
+            </div>
+            {newPassword && confirmPassword && newPassword !== confirmPassword && (
+              <p className="text-xs text-destructive">Passwords do not match.</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetTarget(null)}>Cancel</Button>
+            <Button
+              onClick={handleResetPassword}
+              disabled={resetting || !newPassword || !confirmPassword || newPassword !== confirmPassword || newPassword.length < 6}
+            >
+              {resetting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Update Password
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
