@@ -204,6 +204,7 @@ export default function UserManagement() {
                         size="sm"
                         variant="outline"
                         onClick={() => openResetDialog(u)}
+                        disabled={!editMode}
                         className="h-7 text-xs"
                       >
                         <KeyRound className="h-3 w-3 mr-1" />Reset Password
