@@ -222,53 +222,61 @@ export default function SettingsPage() {
   // ── Process a specific sheet ──────────────────────────────────────────
 
   const processSheet = useCallback((wb: XLSX.WorkBook, sheetName: string) => {
-    const ws = wb.Sheets[sheetName];
-    const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: null });
+    try {
+      const ws = wb.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: null });
 
-    if (!json.length) {
-      toast({ title: 'Empty sheet', description: `No data rows found in "${sheetName}".`, variant: 'destructive' });
+      if (!json.length) {
+        toast({ title: 'Empty sheet', description: `No data rows found in "${sheetName}".`, variant: 'destructive' });
+        setPreview(null);
+        setParsedRows([]);
+        setXlRows([]);
+        return;
+      }
+
+      const headers = Object.keys(json[0]);
+      const mappedHeaders: Record<string, string> = {};
+      headers.forEach(h => {
+        const norm = normalizeHeader(h);
+        const dbCol = COLUMN_MAP[norm];
+        if (dbCol) mappedHeaders[h] = dbCol;
+      });
+
+      if (!Object.values(mappedHeaders).includes('opportunity_id')) {
+        toast({ title: 'CRM ID column not found', description: `Could not find a CRM ID column in sheet "${sheetName}".`, variant: 'destructive' });
+        setPreview(null);
+        setParsedRows([]);
+        setXlRows([]);
+        return;
+      }
+
+      setPreview({ headers, mappedHeaders, rowCount: json.length });
+      setParsedRows(json);
+      setSyncResult(null);
+
+      // Fallout spreadsheet rows
+      const nameH = findHeader(headers, NAME_KEYS);
+      const accountH = findHeader(headers, ACCOUNT_KEYS);
+      const ownerH = findHeader(headers, OWNER_KEYS);
+      const crmKey = Object.keys(mappedHeaders).find(k => mappedHeaders[k] === 'opportunity_id');
+
+      const rows: SpreadsheetRow[] = json
+        .map(r => ({
+          crmId: crmKey ? String(r[crmKey] ?? '').trim() : '',
+          name: nameH ? String(r[nameH] ?? '').trim() : '',
+          accountName: accountH ? String(r[accountH] ?? '').trim() : '',
+          owner: ownerH ? String(r[ownerH] ?? '').trim() : '',
+        }))
+        .filter(r => r.crmId);
+
+      setXlRows(rows);
+    } catch (err: any) {
+      console.error('Sheet processing error:', err);
+      toast({ title: 'Sheet error', description: err.message || 'Could not process the selected sheet.', variant: 'destructive' });
       setPreview(null);
       setParsedRows([]);
       setXlRows([]);
-      return;
     }
-
-    const headers = Object.keys(json[0]);
-    const mappedHeaders: Record<string, string> = {};
-    headers.forEach(h => {
-      const norm = normalizeHeader(h);
-      const dbCol = COLUMN_MAP[norm];
-      if (dbCol) mappedHeaders[h] = dbCol;
-    });
-
-    if (!Object.values(mappedHeaders).includes('opportunity_id')) {
-      toast({ title: 'CRM ID column not found', description: `Could not find a CRM ID column in sheet "${sheetName}".`, variant: 'destructive' });
-      setPreview(null);
-      setParsedRows([]);
-      setXlRows([]);
-      return;
-    }
-
-    setPreview({ headers, mappedHeaders, rowCount: json.length });
-    setParsedRows(json);
-    setSyncResult(null);
-
-    // Fallout spreadsheet rows
-    const nameH = findHeader(headers, NAME_KEYS);
-    const accountH = findHeader(headers, ACCOUNT_KEYS);
-    const ownerH = findHeader(headers, OWNER_KEYS);
-    const crmKey = Object.keys(mappedHeaders).find(k => mappedHeaders[k] === 'opportunity_id');
-
-    const rows: SpreadsheetRow[] = json
-      .map(r => ({
-        crmId: crmKey ? String(r[crmKey] ?? '').trim() : '',
-        name: nameH ? String(r[nameH] ?? '').trim() : '',
-        accountName: accountH ? String(r[accountH] ?? '').trim() : '',
-        owner: ownerH ? String(r[ownerH] ?? '').trim() : '',
-      }))
-      .filter(r => r.crmId);
-
-    setXlRows(rows);
   }, [toast]);
 
   // ── File upload ───────────────────────────────────────────────────────
@@ -282,15 +290,25 @@ export default function SettingsPage() {
 
     const reader = new FileReader();
     reader.onload = (evt) => {
-      const data = new Uint8Array(evt.target?.result as ArrayBuffer);
-      const wb = XLSX.read(data, { type: 'array', cellDates: false });
-      setWorkbook(wb);
-      setSheetNames(wb.SheetNames);
+      try {
+        const data = new Uint8Array(evt.target?.result as ArrayBuffer);
+        const wb = XLSX.read(data, { type: 'array', cellDates: false });
+        setWorkbook(wb);
+        setSheetNames(wb.SheetNames);
 
-      // Auto-select first sheet (or only sheet)
-      const firstSheet = wb.SheetNames[0];
-      setSelectedSheet(firstSheet);
-      processSheet(wb, firstSheet);
+        // Auto-select first sheet (or only sheet)
+        const firstSheet = wb.SheetNames[0];
+        setSelectedSheet(firstSheet);
+        processSheet(wb, firstSheet);
+      } catch (err: any) {
+        console.error('File parse error:', err);
+        toast({ title: 'File error', description: err.message || 'Could not parse the spreadsheet file.', variant: 'destructive' });
+        resetUpload();
+      }
+    };
+    reader.onerror = () => {
+      toast({ title: 'File error', description: 'Failed to read the file.', variant: 'destructive' });
+      resetUpload();
     };
     reader.readAsArrayBuffer(file);
   }, [toast, processSheet]);
