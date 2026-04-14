@@ -8,6 +8,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Users, Loader2, ShieldAlert, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
@@ -22,14 +23,8 @@ interface UserRecord {
   created_at: string;
 }
 
-const deptColors: Record<string, string> = {
-  'Pre-Sales': 'bg-blue-100 text-blue-800',
-  'Sales': 'bg-green-100 text-green-800',
-  'Delivery': 'bg-purple-100 text-purple-800',
-  'Practice Lead': 'bg-orange-100 text-orange-800',
-  'Alliances': 'bg-pink-100 text-pink-800',
-  'Administrator': 'bg-red-100 text-red-800',
-};
+
+const departments = ['Pre-Sales', 'Sales', 'Delivery', 'Practice Lead', 'Alliances', 'Administrator'];
 
 export default function UserManagement() {
   const { user } = useAuth();
@@ -62,6 +57,19 @@ export default function UserManagement() {
     setNewPassword('');
     setConfirmPassword('');
     setShowPassword(false);
+  };
+
+  const handleRoleChange = async (u: UserRecord, newDept: string) => {
+    const { error: updErr } = await supabase
+      .from('profiles')
+      .update({ department: newDept })
+      .eq('user_id', u.user_id);
+    if (updErr) {
+      toast({ title: 'Update failed', description: updErr.message, variant: 'destructive' });
+    } else {
+      setUsers((prev) => prev.map((p) => p.user_id === u.user_id ? { ...p, department: newDept } : p));
+      toast({ title: 'Role updated', description: `${u.full_name || u.email} is now ${newDept}.` });
+    }
   };
 
   const handleResetPassword = async () => {
@@ -154,13 +162,21 @@ export default function UserManagement() {
                     <TableCell className="font-medium">{u.full_name || '—'}</TableCell>
                     <TableCell className="text-muted-foreground">{u.email || '—'}</TableCell>
                     <TableCell>
-                      {u.department ? (
-                        <Badge className={deptColors[u.department] || 'bg-muted text-muted-foreground'} variant="secondary">
-                          {u.department}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground/50 text-xs italic">Not set</span>
-                      )}
+                      <Select
+                        value={u.department || ''}
+                        onValueChange={(val) => handleRoleChange(u, val)}
+                      >
+                        <SelectTrigger className="h-7 w-[140px] text-xs">
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {departments.map((dept) => (
+                            <SelectItem key={dept} value={dept} className="text-xs">
+                              {dept}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {format(new Date(u.created_at), 'MMM d, yyyy')}
