@@ -193,6 +193,10 @@ export default function SettingsPage() {
   const [fileName, setFileName] = useState('');
   const [preview, setPreview] = useState<{ headers: string[]; mappedHeaders: Record<string, string>; rowCount: number } | null>(null);
   const [parsedRows, setParsedRows] = useState<Record<string, any>[]>([]);
+  // Sheet selection state
+  const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
+  const [sheetNames, setSheetNames] = useState<string[]>([]);
+  const [selectedSheet, setSelectedSheet] = useState('');
   // Fallout state
   const [xlRows, setXlRows] = useState<SpreadsheetRow[]>([]);
   const [linking, setLinking] = useState<string | null>(null);
@@ -215,7 +219,59 @@ export default function SettingsPage() {
     },
   });
 
-  // ── File upload (shared) ──────────────────────────────────────────────
+  // ── Process a specific sheet ──────────────────────────────────────────
+
+  const processSheet = useCallback((wb: XLSX.WorkBook, sheetName: string) => {
+    const ws = wb.Sheets[sheetName];
+    const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: null });
+
+    if (!json.length) {
+      toast({ title: 'Empty sheet', description: `No data rows found in "${sheetName}".`, variant: 'destructive' });
+      setPreview(null);
+      setParsedRows([]);
+      setXlRows([]);
+      return;
+    }
+
+    const headers = Object.keys(json[0]);
+    const mappedHeaders: Record<string, string> = {};
+    headers.forEach(h => {
+      const norm = normalizeHeader(h);
+      const dbCol = COLUMN_MAP[norm];
+      if (dbCol) mappedHeaders[h] = dbCol;
+    });
+
+    if (!Object.values(mappedHeaders).includes('opportunity_id')) {
+      toast({ title: 'CRM ID column not found', description: `Could not find a CRM ID column in sheet "${sheetName}".`, variant: 'destructive' });
+      setPreview(null);
+      setParsedRows([]);
+      setXlRows([]);
+      return;
+    }
+
+    setPreview({ headers, mappedHeaders, rowCount: json.length });
+    setParsedRows(json);
+    setSyncResult(null);
+
+    // Fallout spreadsheet rows
+    const nameH = findHeader(headers, NAME_KEYS);
+    const accountH = findHeader(headers, ACCOUNT_KEYS);
+    const ownerH = findHeader(headers, OWNER_KEYS);
+    const crmKey = Object.keys(mappedHeaders).find(k => mappedHeaders[k] === 'opportunity_id');
+
+    const rows: SpreadsheetRow[] = json
+      .map(r => ({
+        crmId: crmKey ? String(r[crmKey] ?? '').trim() : '',
+        name: nameH ? String(r[nameH] ?? '').trim() : '',
+        accountName: accountH ? String(r[accountH] ?? '').trim() : '',
+        owner: ownerH ? String(r[ownerH] ?? '').trim() : '',
+      }))
+      .filter(r => r.crmId);
+
+    setXlRows(rows);
+  }, [toast]);
+
+  // ── File upload ───────────────────────────────────────────────────────
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -228,50 +284,22 @@ export default function SettingsPage() {
     reader.onload = (evt) => {
       const data = new Uint8Array(evt.target?.result as ArrayBuffer);
       const wb = XLSX.read(data, { type: 'array', cellDates: false });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: null });
+      setWorkbook(wb);
+      setSheetNames(wb.SheetNames);
 
-      if (!json.length) {
-        toast({ title: 'Empty file', description: 'No data rows found in the Excel file.', variant: 'destructive' });
-        return;
-      }
-
-      // Sync mapping
-      const headers = Object.keys(json[0]);
-      const mappedHeaders: Record<string, string> = {};
-      headers.forEach(h => {
-        const norm = normalizeHeader(h);
-        const dbCol = COLUMN_MAP[norm];
-        if (dbCol) mappedHeaders[h] = dbCol;
-      });
-
-      if (!Object.values(mappedHeaders).includes('opportunity_id')) {
-        toast({ title: 'CRM ID column not found', description: 'Could not find a CRM ID / Opportunity ID column in the file.', variant: 'destructive' });
-        return;
-      }
-
-      setPreview({ headers, mappedHeaders, rowCount: json.length });
-      setParsedRows(json);
-
-      // Fallout spreadsheet rows
-      const nameH = findHeader(headers, NAME_KEYS);
-      const accountH = findHeader(headers, ACCOUNT_KEYS);
-      const ownerH = findHeader(headers, OWNER_KEYS);
-      const crmKey = Object.keys(mappedHeaders).find(k => mappedHeaders[k] === 'opportunity_id');
-
-      const rows: SpreadsheetRow[] = json
-        .map(r => ({
-          crmId: crmKey ? String(r[crmKey] ?? '').trim() : '',
-          name: nameH ? String(r[nameH] ?? '').trim() : '',
-          accountName: accountH ? String(r[accountH] ?? '').trim() : '',
-          owner: ownerH ? String(r[ownerH] ?? '').trim() : '',
-        }))
-        .filter(r => r.crmId);
-
-      setXlRows(rows);
+      // Auto-select first sheet (or only sheet)
+      const firstSheet = wb.SheetNames[0];
+      setSelectedSheet(firstSheet);
+      processSheet(wb, firstSheet);
     };
     reader.readAsArrayBuffer(file);
-  }, [toast]);
+  }, [toast, processSheet]);
+
+  const handleSheetChange = useCallback((sheetName: string) => {
+    setSelectedSheet(sheetName);
+    setLinkedIds(new Set());
+    if (workbook) processSheet(workbook, sheetName);
+  }, [workbook, processSheet]);
 
   // ── Sync logic ────────────────────────────────────────────────────────
 
