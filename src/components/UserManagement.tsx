@@ -39,6 +39,7 @@ export default function UserManagement() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   const isAdmin = user?.email === 'vijaypralhad.purbhe@techmahindra.com';
 
@@ -141,7 +142,16 @@ export default function UserManagement() {
           <CardTitle className="flex items-center gap-2 text-base">
             <Users className="h-5 w-5 text-primary" />
             User Management
-            <Badge variant="secondary" className="ml-auto">{users.length} users</Badge>
+            <Badge variant="secondary" className="ml-2">{users.length} users</Badge>
+            <Button
+              size="sm"
+              variant={editMode ? 'default' : 'outline'}
+              onClick={() => setEditMode(!editMode)}
+              className="ml-auto h-7 text-xs gap-1"
+            >
+              {editMode ? <Lock className="h-3 w-3" /> : <Pencil className="h-3 w-3" />}
+              {editMode ? 'Lock' : 'Edit'}
+            </Button>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -162,21 +172,29 @@ export default function UserManagement() {
                     <TableCell className="font-medium">{u.full_name || '—'}</TableCell>
                     <TableCell className="text-muted-foreground">{u.email || '—'}</TableCell>
                     <TableCell>
-                      <Select
-                        value={u.department || ''}
-                        onValueChange={(val) => handleRoleChange(u, val)}
-                      >
-                        <SelectTrigger className="h-7 w-[140px] text-xs">
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {departments.map((dept) => (
-                            <SelectItem key={dept} value={dept} className="text-xs">
-                              {dept}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      {editMode ? (
+                        <Select
+                          value={u.department || ''}
+                          onValueChange={(val) => handleRoleChange(u, val)}
+                        >
+                          <SelectTrigger className="h-7 w-[140px] text-xs">
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {departments.map((dept) => (
+                              <SelectItem key={dept} value={dept} className="text-xs">
+                                {dept}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        u.department ? (
+                          <Badge variant="secondary">{u.department}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground/50 text-xs italic">Not set</span>
+                        )
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {format(new Date(u.created_at), 'MMM d, yyyy')}
