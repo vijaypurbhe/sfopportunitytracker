@@ -433,6 +433,9 @@ export default function SettingsPage() {
     setXlRows([]);
     setLinkedIds(new Set());
     setFalloutSearch('');
+    setWorkbook(null);
+    setSheetNames([]);
+    setSelectedSheet('');
   };
 
   return (
