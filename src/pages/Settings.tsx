@@ -495,7 +495,11 @@ export default function SettingsPage() {
                   <div>
                     <p className="text-sm font-medium">{fileName}</p>
                     <p className="text-xs text-muted-foreground">
-                      {preview.rowCount} rows • {Object.keys(preview.mappedHeaders).length} mapped columns • {xlRows.length} with CRM IDs
+                      {preview
+                        ? `${preview.rowCount} rows • ${Object.keys(preview.mappedHeaders).length} mapped columns • ${xlRows.length} with CRM IDs`
+                        : selectedSheet
+                          ? `Sheet "${selectedSheet}" is not usable yet. Choose another sheet with a CRM ID column.`
+                          : 'Workbook loaded. Choose a sheet to continue.'}
                     </p>
                   </div>
                 </div>
@@ -519,8 +523,11 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {/* Tabs: Sync + Fallout */}
-              {preview && (
+              {!preview ? (
+                <div className="rounded-lg border border-dashed bg-muted/20 p-6 text-sm text-muted-foreground">
+                  Select a sheet that contains a valid <strong>CRM ID</strong> column to enable sync and fallout preview.
+                </div>
+              ) : (
               <Tabs defaultValue="sync" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="sync">Data Sync</TabsTrigger>
