@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import RequestGateDialog from '@/components/RequestGateDialog';
 import GateApprovalCard from '@/components/GateApprovalCard';
 import ActivityLogTab from '@/components/ActivityLogTab';
+import EditOpportunityDialog from '@/components/EditOpportunityDialog';
 
 export default function OpportunityDetail() {
   const { id } = useParams<{ id: string }>();
@@ -67,7 +68,7 @@ export default function OpportunityDetail() {
         </div>
         <div className="flex gap-2">
           <RequestGateDialog opportunityId={opp.id} opportunityName={opp.opportunity_name} currentStage={opp.stage} />
-          <Button variant="outline" size="sm">Edit</Button>
+          <EditOpportunityDialog opportunity={opp} />
         </div>
       </div>
 
