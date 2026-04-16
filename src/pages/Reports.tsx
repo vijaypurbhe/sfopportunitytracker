@@ -93,26 +93,25 @@ export default function Reports() {
     return r;
   }, [opportunities, sbu, ibg, account, industry, country, stage, owner, bidManager, salesSpecialist, dateField, dateFrom, dateTo]);
 
-  // KPIs
+  // KPIs (filtered set already excludes Won/Lost/Aborted)
   const kpis = useMemo(() => {
-    const active = filtered.filter(o => {
-      const s = normalizeStage(o.stage, o.sales_stage);
-      return s && !['P-1', 'P-2', 'P-3', 'P5'].includes(s);
-    });
+    const active = filtered;
     const totalTcv = active.reduce((s, o) => s + (Number(o.overall_tcv) || 0), 0);
-    const won = filtered.filter(o => normalizeStage(o.stage, o.sales_stage) === 'P5');
-    const lost = filtered.filter(o => normalizeStage(o.stage, o.sales_stage) === 'P-1');
-    const closed = won.length + lost.length;
-    const winRate = closed > 0 ? (won.length / closed) * 100 : 0;
     const avgDeal = active.length > 0 ? totalTcv / active.length : 0;
+    const weightedTcv = active.reduce(
+      (s, o) => s + ((Number(o.overall_tcv) || 0) * ((Number(o.win_probability) || 0) / 100)),
+      0
+    );
+    const avgWinProb = active.length > 0
+      ? active.reduce((s, o) => s + (Number(o.win_probability) || 0), 0) / active.length
+      : 0;
     return {
       totalRecords: filtered.length,
       activeDeals: active.length,
       totalTcv,
-      winRate,
       avgDeal,
-      won: won.length,
-      lost: lost.length,
+      weightedTcv,
+      avgWinProb,
     };
   }, [filtered]);
 
