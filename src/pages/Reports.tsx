@@ -65,7 +65,11 @@ export default function Reports() {
 
   const filtered = useMemo(() => {
     if (!opportunities) return [];
-    let r = opportunities;
+    // Exclude Aborted (P-2), Lost (P-1), and Won (P5) opportunities
+    let r = opportunities.filter(o => {
+      const s = normalizeStage(o.stage, o.sales_stage);
+      return s && !['P-1', 'P-2', 'P5'].includes(s);
+    });
     r = applyMultiFilter(r, o => o.account_sbu, sbu.selected, sbu.mode);
     r = applyMultiFilter(r, o => o.account_ibg, ibg.selected, ibg.mode);
     r = applyMultiFilter(r, o => o.account_name, account.selected, account.mode);
@@ -89,26 +93,25 @@ export default function Reports() {
     return r;
   }, [opportunities, sbu, ibg, account, industry, country, stage, owner, bidManager, salesSpecialist, dateField, dateFrom, dateTo]);
 
-  // KPIs
+  // KPIs (filtered set already excludes Won/Lost/Aborted)
   const kpis = useMemo(() => {
-    const active = filtered.filter(o => {
-      const s = normalizeStage(o.stage, o.sales_stage);
-      return s && !['P-1', 'P-2', 'P-3', 'P5'].includes(s);
-    });
+    const active = filtered;
     const totalTcv = active.reduce((s, o) => s + (Number(o.overall_tcv) || 0), 0);
-    const won = filtered.filter(o => normalizeStage(o.stage, o.sales_stage) === 'P5');
-    const lost = filtered.filter(o => normalizeStage(o.stage, o.sales_stage) === 'P-1');
-    const closed = won.length + lost.length;
-    const winRate = closed > 0 ? (won.length / closed) * 100 : 0;
     const avgDeal = active.length > 0 ? totalTcv / active.length : 0;
+    const weightedTcv = active.reduce(
+      (s, o) => s + ((Number(o.overall_tcv) || 0) * ((Number(o.win_probability) || 0) / 100)),
+      0
+    );
+    const avgWinProb = active.length > 0
+      ? active.reduce((s, o) => s + (Number(o.win_probability) || 0), 0) / active.length
+      : 0;
     return {
       totalRecords: filtered.length,
       activeDeals: active.length,
       totalTcv,
-      winRate,
       avgDeal,
-      won: won.length,
-      lost: lost.length,
+      weightedTcv,
+      avgWinProb,
     };
   }, [filtered]);
 
@@ -140,9 +143,39 @@ export default function Reports() {
     doc.setTextColor(100);
     doc.text(`Generated: ${new Date().toLocaleString()}`, margin, y);
     y += 14;
-    doc.text(`Records included: ${kpis.totalRecords}`, margin, y);
+    doc.text(`Records included: ${kpis.totalRecords} (excludes Won, Lost, Aborted)`, margin, y);
     y += 18;
     doc.setTextColor(0);
+
+    // Key Metrics — visual KPI cards at the top
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Key Metrics', margin, y);
+    y += 10;
+    const cardW = (515 - 12) / 4;
+    const cardH = 56;
+    const cards = [
+      { label: 'Total Active TCV', value: formatCurrency(kpis.totalTcv) },
+      { label: 'Active Deals', value: String(kpis.activeDeals) },
+      { label: 'Weighted TCV', value: formatCurrency(kpis.weightedTcv) },
+      { label: 'Avg Deal Size', value: formatCurrency(kpis.avgDeal) },
+    ];
+    cards.forEach((c, i) => {
+      const x = margin + i * (cardW + 4);
+      doc.setFillColor(243, 244, 246);
+      doc.setDrawColor(229, 231, 235);
+      doc.roundedRect(x, y, cardW, cardH, 4, 4, 'FD');
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(107, 114, 128);
+      doc.text(c.label, x + 8, y + 16);
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(17, 24, 39);
+      doc.text(c.value, x + 8, y + 38);
+    });
+    doc.setTextColor(0);
+    y += cardH + 18;
 
     // Filters summary
     const activeFilters: string[] = [];
@@ -180,9 +213,8 @@ export default function Reports() {
         ['Active Deals', String(kpis.activeDeals)],
         ['Total Active TCV', formatCurrency(kpis.totalTcv)],
         ['Avg Active Deal Size', formatCurrency(kpis.avgDeal)],
-        ['Won Deals', String(kpis.won)],
-        ['Lost Deals', String(kpis.lost)],
-        ['Win Rate', `${kpis.winRate.toFixed(1)}%`],
+        ['Weighted TCV (TCV × Win %)', formatCurrency(kpis.weightedTcv)],
+        ['Avg Win Probability', `${kpis.avgWinProb.toFixed(1)}%`],
       ],
       theme: 'grid',
       headStyles: { fillColor: [59, 130, 246] },
@@ -275,8 +307,8 @@ export default function Reports() {
           <p className="text-xl font-bold">{kpis.activeDeals}</p>
         </CardContent></Card>
         <Card><CardContent className="p-4">
-          <p className="text-xs text-muted-foreground flex items-center gap-1"><Target className="h-3 w-3" />Win Rate</p>
-          <p className="text-xl font-bold">{kpis.winRate.toFixed(1)}%</p>
+          <p className="text-xs text-muted-foreground flex items-center gap-1"><Target className="h-3 w-3" />Weighted TCV</p>
+          <p className="text-xl font-bold">{formatCurrency(kpis.weightedTcv)}</p>
         </CardContent></Card>
         <Card><CardContent className="p-4">
           <p className="text-xs text-muted-foreground flex items-center gap-1"><TrendingUp className="h-3 w-3" />Avg Deal Size</p>
