@@ -144,9 +144,39 @@ export default function Reports() {
     doc.setTextColor(100);
     doc.text(`Generated: ${new Date().toLocaleString()}`, margin, y);
     y += 14;
-    doc.text(`Records included: ${kpis.totalRecords}`, margin, y);
+    doc.text(`Records included: ${kpis.totalRecords} (excludes Won, Lost, Aborted)`, margin, y);
     y += 18;
     doc.setTextColor(0);
+
+    // Key Metrics — visual KPI cards at the top
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Key Metrics', margin, y);
+    y += 10;
+    const cardW = (515 - 12) / 4;
+    const cardH = 56;
+    const cards = [
+      { label: 'Total Active TCV', value: formatCurrency(kpis.totalTcv) },
+      { label: 'Active Deals', value: String(kpis.activeDeals) },
+      { label: 'Win Rate', value: `${kpis.winRate.toFixed(1)}%` },
+      { label: 'Avg Deal Size', value: formatCurrency(kpis.avgDeal) },
+    ];
+    cards.forEach((c, i) => {
+      const x = margin + i * (cardW + 4);
+      doc.setFillColor(243, 244, 246);
+      doc.setDrawColor(229, 231, 235);
+      doc.roundedRect(x, y, cardW, cardH, 4, 4, 'FD');
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(107, 114, 128);
+      doc.text(c.label, x + 8, y + 16);
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(17, 24, 39);
+      doc.text(c.value, x + 8, y + 38);
+    });
+    doc.setTextColor(0);
+    y += cardH + 18;
 
     // Filters summary
     const activeFilters: string[] = [];
