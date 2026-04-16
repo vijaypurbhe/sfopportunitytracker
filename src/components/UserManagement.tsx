@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,10 +26,12 @@ interface UserRecord {
 
 
 const departments = ['Pre-Sales', 'Sales', 'Delivery', 'Practice Lead', 'Alliances', 'Administrator'];
+const ADMIN_DEPARTMENT = 'Administrator';
 
 export default function UserManagement() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -40,6 +43,7 @@ export default function UserManagement() {
   const [showPassword, setShowPassword] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   const isAdmin = user?.email === 'vijaypralhad.purbhe@techmahindra.com';
 
@@ -61,16 +65,59 @@ export default function UserManagement() {
   };
 
   const handleRoleChange = async (u: UserRecord, newDept: string) => {
-    const { error: updErr } = await supabase
+    if (u.department === newDept) return;
+
+    const previousDept = u.department;
+    setUpdatingUserId(u.user_id);
+
+    const { data: updatedProfile, error: updErr } = await supabase
       .from('profiles')
       .update({ department: newDept })
-      .eq('user_id', u.user_id);
-    if (updErr) {
+      .eq('user_id', u.user_id)
+      .select('user_id, department')
+      .maybeSingle();
+
+    if (updErr || !updatedProfile) {
       toast({ title: 'Update failed', description: updErr.message, variant: 'destructive' });
-    } else {
-      setUsers((prev) => prev.map((p) => p.user_id === u.user_id ? { ...p, department: newDept } : p));
-      toast({ title: 'Role updated', description: `${u.full_name || u.email} is now ${newDept}.` });
+      setUpdatingUserId(null);
+      return;
     }
+
+    let roleError: Error | null = null;
+    const shouldGrantAdmin = newDept === ADMIN_DEPARTMENT;
+    const shouldRemoveAdmin = previousDept === ADMIN_DEPARTMENT && newDept !== ADMIN_DEPARTMENT;
+
+    if (shouldGrantAdmin) {
+      const { error: adminRoleError } = await supabase
+        .from('user_roles')
+        .upsert([{ user_id: u.user_id, role: 'admin' }], { onConflict: 'user_id,role' });
+
+      if (adminRoleError) roleError = new Error(adminRoleError.message);
+    } else if (shouldRemoveAdmin) {
+      const { error: adminRoleError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', u.user_id)
+        .eq('role', 'admin');
+
+      if (adminRoleError) roleError = new Error(adminRoleError.message);
+    }
+
+    if (roleError) {
+      await supabase
+        .from('profiles')
+        .update({ department: previousDept })
+        .eq('user_id', u.user_id);
+
+      toast({ title: 'Update failed', description: roleError.message, variant: 'destructive' });
+      setUpdatingUserId(null);
+      return;
+    }
+
+    setUsers((prev) => prev.map((p) => p.user_id === u.user_id ? { ...p, department: newDept } : p));
+    queryClient.invalidateQueries({ queryKey: ['my-profile'] });
+    toast({ title: 'Role updated', description: `${u.full_name || u.email} is now ${newDept}.` });
+    setUpdatingUserId(null);
   };
 
   const handleResetPassword = async () => {
@@ -176,6 +223,7 @@ export default function UserManagement() {
                         <Select
                           value={u.department || ''}
                           onValueChange={(val) => handleRoleChange(u, val)}
+                          disabled={updatingUserId === u.user_id}
                         >
                           <SelectTrigger className="h-7 w-[140px] text-xs">
                             <SelectValue placeholder="Select role" />
