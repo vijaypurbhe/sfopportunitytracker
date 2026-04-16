@@ -137,12 +137,12 @@ export default function EditOpportunityDialog({ opportunity }: Props) {
           <Pencil className="h-4 w-4 mr-1.5" /> Edit
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-6 pt-6 pb-3 shrink-0 border-b">
           <DialogTitle>Edit Opportunity</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="flex-1 pr-4 -mr-4">
-          <div className="space-y-6 py-2">
+        <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
+          <div className="space-y-6">
             {SECTIONS.map(section => (
               <div key={section.title}>
                 <h3 className="text-sm font-semibold text-foreground mb-3">{section.title}</h3>
@@ -178,8 +178,8 @@ export default function EditOpportunityDialog({ opportunity }: Props) {
               </div>
             ))}
           </div>
-        </ScrollArea>
-        <DialogFooter>
+        </div>
+        <DialogFooter className="px-6 py-4 shrink-0 border-t">
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
           <Button onClick={handleSave} disabled={updateOpp.isPending}>
             {updateOpp.isPending ? 'Saving...' : 'Save Changes'}
