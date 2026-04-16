@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   BarChart3, LayoutDashboard, Kanban, List, Building2,
-  Bell, Settings, LogOut, ChevronLeft, ChevronRight, Sparkles, ShieldCheck
+  Bell, Settings, LogOut, ChevronLeft, ChevronRight, Sparkles, ShieldCheck, FileText
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,7 +20,7 @@ const allNavItems = [
   { to: '/gates', icon: ShieldCheck, label: 'Approval Gates' },
   { to: '/ai-insights', icon: Sparkles, label: 'AI Insights' },
   { to: '/notifications', icon: Bell, label: 'Notifications' },
-  
+  { to: '/reports', icon: FileText, label: 'Reports', adminOnly: true },
   { to: '/settings', icon: Settings, label: 'Settings', adminOnly: true },
 ];
 
