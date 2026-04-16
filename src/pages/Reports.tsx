@@ -65,7 +65,11 @@ export default function Reports() {
 
   const filtered = useMemo(() => {
     if (!opportunities) return [];
-    let r = opportunities;
+    // Exclude Aborted (P-2), Lost (P-1), and Won (P5) opportunities
+    let r = opportunities.filter(o => {
+      const s = normalizeStage(o.stage, o.sales_stage);
+      return s && !['P-1', 'P-2', 'P5'].includes(s);
+    });
     r = applyMultiFilter(r, o => o.account_sbu, sbu.selected, sbu.mode);
     r = applyMultiFilter(r, o => o.account_ibg, ibg.selected, ibg.mode);
     r = applyMultiFilter(r, o => o.account_name, account.selected, account.mode);
