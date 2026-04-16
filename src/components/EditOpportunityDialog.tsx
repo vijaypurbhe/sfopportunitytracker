@@ -13,8 +13,16 @@ import { ALL_STAGES } from '@/lib/format';
 
 type Props = { opportunity: Opportunity };
 
-// Fields explicitly NOT editable per request
-const LOCKED = new Set(['opportunity_owner', 'bid_manager', 'sales_specialist_name']);
+// Fields explicitly NOT editable per request (still displayed for reference)
+const LOCKED = new Set([
+  'opportunity_owner',
+  'bid_manager',
+  'sales_specialist_name',
+  'opportunity_name',
+  'opportunity_id', // CRM ID
+  'account_name',
+  'account_owner',
+]);
 
 type FieldDef = {
   key: keyof Opportunity;
