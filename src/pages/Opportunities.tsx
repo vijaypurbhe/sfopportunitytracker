@@ -16,7 +16,7 @@ import RegionFilter from '@/components/RegionFilter';
 import { filterByRegion } from '@/lib/regions';
 import MultiSelectFilter, { applyMultiFilter, type FilterMode } from '@/components/MultiSelectFilter';
 
-const ALL_STAGES = ['P1', 'P2', 'P3', 'P4', 'P5'];
+
 
 export default function Opportunities() {
   const { user } = useAuth();
@@ -32,6 +32,11 @@ export default function Opportunities() {
   const [sortField, setSortField] = useState<string>('updated_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const { regionFilter, setRegionFilter } = useRegionFilter();
+
+  const stages = useMemo(() => {
+    if (!opportunities) return [];
+    return [...new Set(opportunities.map(o => o.stage).filter(Boolean))].sort() as string[];
+  }, [opportunities]);
 
   const industries = useMemo(() => {
     if (!opportunities) return [];
@@ -109,7 +114,7 @@ export default function Opportunities() {
         </div>
         <MultiSelectFilter
           label="Stage"
-          options={ALL_STAGES}
+          options={stages}
           selected={stageSelected}
           mode={stageMode}
           onSelectionChange={setStageSelected}
