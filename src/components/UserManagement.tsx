@@ -70,14 +70,12 @@ export default function UserManagement() {
     const previousDept = u.department;
     setUpdatingUserId(u.user_id);
 
-    const { data: updatedProfile, error: updErr } = await supabase
+    const { error: updErr } = await supabase
       .from('profiles')
       .update({ department: newDept })
-      .eq('user_id', u.user_id)
-      .select('user_id, department')
-      .maybeSingle();
+      .eq('user_id', u.user_id);
 
-    if (updErr || !updatedProfile) {
+    if (updErr) {
       toast({ title: 'Update failed', description: updErr.message, variant: 'destructive' });
       setUpdatingUserId(null);
       return;
