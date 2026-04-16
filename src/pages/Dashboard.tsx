@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { useRegionFilter } from '@/hooks/useRegionFilter';
-import { formatCurrency, formatPercent, getStageColor, getStageName, ALL_STAGES, isActiveStage } from '@/lib/format';
+import { formatCurrency, formatPercent, getStageColor, getStageName, ALL_STAGES, isActiveStage, normalizeStage } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
@@ -83,13 +83,11 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef, regionFilter }: { ti
 
   return createPortal(
     <>
-      {/* Backdrop overlay with blur */}
       <div
         className="fixed inset-0 z-[100] bg-black/25 backdrop-blur-sm"
         style={{ animation: 'fadeIn 200ms ease-out' }}
         onClick={() => setOpen(false)}
       />
-      {/* Floating card anchored to tile position */}
       <div
         className="fixed z-[101] flex flex-col rounded-2xl bg-white border border-[hsl(217,91%,60%,0.15)] shadow-2xl shadow-[hsl(217,91%,60%,0.12)]"
         style={{
@@ -101,7 +99,6 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef, regionFilter }: { ti
           animation: 'popIn 200ms ease-out',
         }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/30 shrink-0">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-[hsl(217,91%,60%,0.1)]">
@@ -117,7 +114,6 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef, regionFilter }: { ti
           </button>
         </div>
 
-        {/* Response body */}
         <div className="flex-1 overflow-y-auto px-5 py-4 min-h-[140px]">
           {loading ? (
             <div className="flex items-center gap-2.5 text-muted-foreground py-8 justify-center">
@@ -143,7 +139,6 @@ function TileAgentPopover({ tileTitle, tileData, anchorRef, regionFilter }: { ti
           )}
         </div>
 
-        {/* Input area */}
         <div className="px-5 py-3.5 border-t border-border/30 shrink-0">
           <div className="flex gap-2">
             <input
@@ -195,28 +190,39 @@ export default function Dashboard() {
 
   const activeOpps = opps.filter(o => isActiveStage(o.stage, o.sales_stage));
   const totalTCV = activeOpps.reduce((sum, o) => sum + (Number(o.overall_tcv) || 0), 0);
-  const avgWinProb = activeOpps.length ? activeOpps.reduce((sum, o) => sum + (o.win_probability || 0), 0) / activeOpps.length : 0;
-  const wonDeals = opps.filter(o => o.stage === 'P5' || o.sales_stage?.includes('Won'));
-  const lostDeals = opps.filter(o => o.sales_stage?.includes('Lost') || o.stage?.toLowerCase() === 'lost');
+  const wonDeals = opps.filter(o => normalizeStage(o.stage, o.sales_stage) === 'P5');
+  const lostDeals = opps.filter(o => normalizeStage(o.stage, o.sales_stage) === 'P-1');
   const closedDeals = wonDeals.length + lostDeals.length;
   const winRate = closedDeals > 0 ? (wonDeals.length / closedDeals * 100) : 0;
   const avgDealSize = activeOpps.length > 0 ? totalTCV / activeOpps.length : 0;
 
-  const stageData = ALL_STAGES.map(s => {
-    const stageOpps = opps.filter(o => o.stage === s);
-    return { stage: s, name: getStageName(s), count: stageOpps.length, tcv: stageOpps.reduce((sum, o) => sum + (Number(o.overall_tcv) || 0), 0) };
+  const stageData = ALL_STAGES.map((stageCode) => {
+    const stageOpps = opps.filter(o => normalizeStage(o.stage, o.sales_stage) === stageCode);
+    return {
+      stage: stageCode,
+      name: getStageName(stageCode),
+      count: stageOpps.length,
+      tcv: stageOpps.reduce((sum, o) => sum + (Number(o.overall_tcv) || 0), 0),
+    };
   }).filter(d => d.count > 0);
 
   const industryMap = new Map<string, number>();
-  opps.forEach(o => { const ind = o.primary_industry || 'Unknown'; industryMap.set(ind, (industryMap.get(ind) || 0) + 1); });
+  opps.forEach(o => {
+    const ind = o.primary_industry || 'Unknown';
+    industryMap.set(ind, (industryMap.get(ind) || 0) + 1);
+  });
   const industryData = Array.from(industryMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name, value]) => ({ name, value }));
 
   const probBuckets = [
-    { range: '0-20%', min: 0, max: 20 }, { range: '21-40%', min: 21, max: 40 },
-    { range: '41-60%', min: 41, max: 60 }, { range: '61-80%', min: 61, max: 80 }, { range: '81-100%', min: 81, max: 100 },
+    { range: '0-20%', min: 0, max: 20 },
+    { range: '21-40%', min: 21, max: 40 },
+    { range: '41-60%', min: 41, max: 60 },
+    { range: '61-80%', min: 61, max: 80 },
+    { range: '81-100%', min: 81, max: 100 },
   ];
   const probData = probBuckets.map(b => ({
-    range: b.range, count: opps.filter(o => (o.win_probability || 0) >= b.min && (o.win_probability || 0) <= b.max).length,
+    range: b.range,
+    count: opps.filter(o => (o.win_probability || 0) >= b.min && (o.win_probability || 0) <= b.max).length,
   }));
 
   const fyData = [
@@ -230,13 +236,12 @@ export default function Dashboard() {
   const now = new Date();
   const in90 = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
   const closingSoon = opps
-    .filter(o => o.expected_close_date && new Date(o.expected_close_date) <= in90 && new Date(o.expected_close_date) >= now && o.stage !== 'P5')
+    .filter(o => o.expected_close_date && new Date(o.expected_close_date) <= in90 && new Date(o.expected_close_date) >= now && normalizeStage(o.stage, o.sales_stage) !== 'P5')
     .sort((a, b) => new Date(a.expected_close_date!).getTime() - new Date(b.expected_close_date!).getTime())
     .slice(0, 5);
 
   return (
     <div className="p-6 space-y-6 min-h-screen bg-gradient-to-br from-[hsl(210,20%,97%)] via-[hsl(215,25%,95%)] to-[hsl(210,20%,97%)]">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
@@ -245,7 +250,6 @@ export default function Dashboard() {
         <RegionFilter value={regionFilter} onChange={setRegionFilter} />
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div ref={tileRef1}>
           <GlassCard className="relative">
@@ -316,7 +320,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <GlassCard>
           <div className="p-5">
@@ -352,7 +355,6 @@ export default function Dashboard() {
         </GlassCard>
       </div>
 
-      {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <GlassCard>
           <div className="p-5">
@@ -391,11 +393,10 @@ export default function Dashboard() {
         </GlassCard>
       </div>
 
-      {/* Recent Opportunities (last 7 days) */}
       {(() => {
         const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         const recentOpps = opps
-          .filter(o => o.created_at && new Date(o.created_at) >= sevenDaysAgo && o.stage !== 'P5')
+          .filter(o => o.created_at && new Date(o.created_at) >= sevenDaysAgo && normalizeStage(o.stage, o.sales_stage) !== 'P5')
           .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
           .slice(0, 10);
         return (
@@ -410,18 +411,21 @@ export default function Dashboard() {
                 <p className="text-muted-foreground text-sm py-4 text-center">No opportunities created in the last 7 days</p>
               ) : (
                 <div className="space-y-2">
-                  {recentOpps.map(opp => (
-                    <div key={opp.id} className="flex items-center justify-between p-3 rounded-xl bg-white/40 backdrop-blur-sm border border-white/20 cursor-pointer hover:bg-white/60 transition-colors" onClick={() => navigate(`/opportunities/${opp.id}`)}>
-                      <div>
-                        <p className="font-medium text-sm">{opp.opportunity_name}</p>
-                        <p className="text-xs text-muted-foreground">{opp.account_name} • Created {new Date(opp.created_at).toLocaleDateString()}</p>
+                  {recentOpps.map(opp => {
+                    const stageCode = normalizeStage(opp.stage, opp.sales_stage);
+                    return (
+                      <div key={opp.id} className="flex items-center justify-between p-3 rounded-xl bg-white/40 backdrop-blur-sm border border-white/20 cursor-pointer hover:bg-white/60 transition-colors" onClick={() => navigate(`/opportunities/${opp.id}`)}>
+                        <div>
+                          <p className="font-medium text-sm">{opp.opportunity_name}</p>
+                          <p className="text-xs text-muted-foreground">{opp.account_name} • Created {new Date(opp.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge className={getStageColor(stageCode)}>{stageCode || 'N/A'}</Badge>
+                          <span className="text-sm font-semibold">{formatCurrency(opp.overall_tcv)}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Badge className={getStageColor(opp.stage)}>{opp.stage || 'N/A'}</Badge>
-                        <span className="text-sm font-semibold">{formatCurrency(opp.overall_tcv)}</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -429,7 +433,6 @@ export default function Dashboard() {
         );
       })()}
 
-      {/* Deals Closing Soon */}
       <GlassCard>
         <div className="p-5">
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
@@ -440,18 +443,21 @@ export default function Dashboard() {
             <p className="text-muted-foreground text-sm py-4 text-center">No deals closing in the next 90 days</p>
           ) : (
             <div className="space-y-2">
-              {closingSoon.map(opp => (
-                <div key={opp.id} className="flex items-center justify-between p-3 rounded-xl bg-white/40 backdrop-blur-sm border border-white/20 cursor-pointer hover:bg-white/60 transition-colors" onClick={() => navigate(`/opportunities/${opp.id}`)}>
-                  <div>
-                    <p className="font-medium text-sm">{opp.opportunity_name}</p>
-                    <p className="text-xs text-muted-foreground">{opp.account_name} • {opp.opportunity_owner}</p>
+              {closingSoon.map(opp => {
+                const stageCode = normalizeStage(opp.stage, opp.sales_stage);
+                return (
+                  <div key={opp.id} className="flex items-center justify-between p-3 rounded-xl bg-white/40 backdrop-blur-sm border border-white/20 cursor-pointer hover:bg-white/60 transition-colors" onClick={() => navigate(`/opportunities/${opp.id}`)}>
+                    <div>
+                      <p className="font-medium text-sm">{opp.opportunity_name}</p>
+                      <p className="text-xs text-muted-foreground">{opp.account_name} • {opp.opportunity_owner}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge className={getStageColor(stageCode)}>{stageCode || 'N/A'}</Badge>
+                      <span className="text-sm font-semibold">{formatCurrency(opp.overall_tcv)}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Badge className={getStageColor(opp.stage)}>{opp.stage}</Badge>
-                    <span className="text-sm font-semibold">{formatCurrency(opp.overall_tcv)}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
