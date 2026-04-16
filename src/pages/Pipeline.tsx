@@ -33,7 +33,7 @@ function sortOpps(opps: any[], sort: SortOption) {
 
 export default function Pipeline() {
   const { data: opportunities, isLoading } = useOpportunities();
-  const [visibleStages, setVisibleStages] = useState<Set<string>>(new Set(ALL_STAGES.filter(s => s !== 'P-1')));
+  const [visibleStages, setVisibleStages] = useState<Set<string>>(new Set(['P0', 'P1', 'P2', 'P3', 'P3.1', 'P4']));
   const [sortBy, setSortBy] = useState<SortOption>('tcv_desc');
   const { regionFilter, setRegionFilter } = useRegionFilter();
 
