@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { useRegionFilter } from '@/hooks/useRegionFilter';
-import { formatCurrency, getStageColor } from '@/lib/format';
+import { formatCurrency, getStageColor, normalizeStage, ALL_STAGES } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,7 +13,7 @@ import CreateOpportunityDialog from '@/components/CreateOpportunityDialog';
 import RegionFilter from '@/components/RegionFilter';
 import { filterByRegion } from '@/lib/regions';
 
-const ALL_STAGES = ['P1', 'P2', 'P3', 'P4', 'P5'];
+
 
 type SortOption = 'tcv_desc' | 'tcv_asc' | 'win_desc' | 'win_asc' | 'name_asc' | 'close_asc';
 
@@ -53,7 +53,7 @@ export default function Pipeline() {
     return ALL_STAGES
       .filter(s => visibleStages.has(s))
       .map(stage => {
-        const opps = sortOpps(filteredOpps.filter(o => o.stage === stage), sortBy);
+        const opps = sortOpps(filteredOpps.filter(o => normalizeStage(o.stage, o.sales_stage) === stage), sortBy);
         return {
           stage,
           opps,
