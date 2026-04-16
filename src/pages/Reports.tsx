@@ -157,7 +157,7 @@ export default function Reports() {
     const cards = [
       { label: 'Total Active TCV', value: formatCurrency(kpis.totalTcv) },
       { label: 'Active Deals', value: String(kpis.activeDeals) },
-      { label: 'Win Rate', value: `${kpis.winRate.toFixed(1)}%` },
+      { label: 'Weighted TCV', value: formatCurrency(kpis.weightedTcv) },
       { label: 'Avg Deal Size', value: formatCurrency(kpis.avgDeal) },
     ];
     cards.forEach((c, i) => {
