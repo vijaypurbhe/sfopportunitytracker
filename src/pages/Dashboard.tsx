@@ -196,7 +196,7 @@ export default function Dashboard() {
   const winRate = closedDeals > 0 ? (wonDeals.length / closedDeals * 100) : 0;
   const avgDealSize = activeOpps.length > 0 ? totalTCV / activeOpps.length : 0;
 
-  const stageData = ALL_STAGES.map((stageCode) => {
+  const stageData = ALL_STAGES.filter(s => s !== 'P-1').map((stageCode) => {
     const stageOpps = opps.filter(o => normalizeStage(o.stage, o.sales_stage) === stageCode);
     return {
       stage: stageCode,
