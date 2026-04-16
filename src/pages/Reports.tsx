@@ -307,8 +307,8 @@ export default function Reports() {
           <p className="text-xl font-bold">{kpis.activeDeals}</p>
         </CardContent></Card>
         <Card><CardContent className="p-4">
-          <p className="text-xs text-muted-foreground flex items-center gap-1"><Target className="h-3 w-3" />Win Rate</p>
-          <p className="text-xl font-bold">{kpis.winRate.toFixed(1)}%</p>
+          <p className="text-xs text-muted-foreground flex items-center gap-1"><Target className="h-3 w-3" />Weighted TCV</p>
+          <p className="text-xl font-bold">{formatCurrency(kpis.weightedTcv)}</p>
         </CardContent></Card>
         <Card><CardContent className="p-4">
           <p className="text-xs text-muted-foreground flex items-center gap-1"><TrendingUp className="h-3 w-3" />Avg Deal Size</p>
