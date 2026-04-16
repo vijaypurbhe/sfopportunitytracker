@@ -25,9 +25,35 @@ export const ALL_STAGES = ['P-1', 'P-2', 'P-3', 'P0', 'P1', 'P2', 'P3', 'P3.1', 
 export const ACTIVE_STAGES = ['P-1', 'P-2', 'P-3', 'P0', 'P1', 'P2', 'P3', 'P3.1', 'P4'] as const;
 
 const ACTIVE_STAGE_SET = new Set(['P0', 'P1', 'P2', 'P3', 'P3.1', 'P4']);
+const STAGE_LABEL_MAP: Record<string, string> = {
+  win: 'P5',
+  lost: 'P-1',
+  aborted: 'P-2',
+  hibernate: 'P-3',
+};
 
-export function isActiveStage(stage: string | null | undefined, _salesStage?: string | null): boolean {
-  return stage != null && ACTIVE_STAGE_SET.has(stage);
+export function normalizeStage(stage: string | null | undefined, salesStage?: string | null): string | null {
+  const candidates = [salesStage, stage];
+
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+
+    const trimmed = candidate.trim();
+    if (ALL_STAGES.includes(trimmed as typeof ALL_STAGES[number])) return trimmed;
+
+    const matchedCode = trimmed.match(/\b(P-?\d(?:\.\d+)?)\b/i)?.[1]?.toUpperCase();
+    if (matchedCode && ALL_STAGES.includes(matchedCode as typeof ALL_STAGES[number])) return matchedCode;
+
+    const mappedStage = STAGE_LABEL_MAP[trimmed.toLowerCase()];
+    if (mappedStage) return mappedStage;
+  }
+
+  return null;
+}
+
+export function isActiveStage(stage: string | null | undefined, salesStage?: string | null): boolean {
+  const normalizedStage = normalizeStage(stage, salesStage);
+  return normalizedStage != null && ACTIVE_STAGE_SET.has(normalizedStage);
 }
 
 export function getStageColor(stage: string | null | undefined): string {
