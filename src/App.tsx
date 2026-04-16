@@ -17,6 +17,7 @@ import Gates from "@/pages/Gates";
 import AIInsights from "@/pages/AIInsights";
 import Notifications from "@/pages/Notifications";
 import SettingsPage from "@/pages/Settings";
+import Reports from "@/pages/Reports";
 
 import NotFound from "@/pages/NotFound";
 
@@ -57,6 +58,7 @@ const App = () => (
               <Route path="ai-insights" element={<AIInsights />} />
               <Route path="notifications" element={<Notifications />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="reports" element={<Reports />} />
               
             </Route>
             <Route path="*" element={<NotFound />} />
